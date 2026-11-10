@@ -1,121 +1,60 @@
-# BearWatch stack.
-#
-# Networks:
-#   edge     - normal bridge network with internet access (proxy + web only;
-#              web needs outbound to talk to Google/GitHub during OAuth).
-#   internal - `internal: true`, so NOTHING on it can reach the internet.
-#              The image worker and bear detector live only here, which is
-#              how we get "libvips in a worker container with no outbound network".
-#
-# Phase 0: only `db` is runnable (`docker compose up db`). The app services
-# build once backend/, frontend/ and detector/ are scaffolded in Phase 1.
+# Development stack:  docker compose up
+#   http://localhost:5173  -> Vite dev server (SPA). /api and /auth are proxied
+#                             to Rails, so the browser sees a single origin.
+# Production lives in compose.prod.yaml.
 
-name: bearwatch
+name: bearwatch-dev
 
 services:
-  proxy:
-    image: caddy:2-alpine
-    ports:
-      - "80:80"
-      - "443:443"
+  web:
+    build:
+      context: ./backend
+      target: dev
+    env_file: .env
+    environment:
+      RAILS_ENV: development
+      DATABASE_HOST: db
+      DATABASE_USERNAME: root
+      DATABASE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
-      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - frontend_dist:/srv/app:ro
-      - media:/srv/media:ro
+      - ./backend:/rails
+      - bundle:/usr/local/bundle
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    environment:
+      VITE_API_TARGET: http://web:3000
+      # Bind mounts from Windows don't deliver file events; poll instead.
+      VITE_USE_POLLING: "true"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "5173:5173"
     depends_on:
       - web
-    networks: [edge]
-    restart: unless-stopped
-
-  web:
-    build: ./backend
-    command: ["./bin/rails", "server", "-b", "0.0.0.0", "-p", "3000"]
-    env_file: .env
-    environment:
-      DATABASE_HOST: db
-      DETECTOR_URL: http://detector:8000
-    volumes:
-      - uploads:/rails/storage/uploads   # raw uploads land here (quarantine)
-      - media:/rails/storage/media       # processed WebP output
-    depends_on:
-      db:
-        condition: service_healthy
-    networks: [edge, internal]
-    restart: unless-stopped
-
-  # Background jobs (Solid Queue, DB-backed: no Redis needed on the Pi).
-  # Runs libvips re-encoding + calls the detector. No internet access.
-  worker:
-    build: ./backend
-    command: ["./bin/jobs"]
-    env_file: .env
-    environment:
-      DATABASE_HOST: db
-      DETECTOR_URL: http://detector:8000
-    volumes:
-      - uploads:/rails/storage/uploads
-      - media:/rails/storage/media
-    depends_on:
-      db:
-        condition: service_healthy
-    networks: [internal]
-    mem_limit: 768m
-    restart: unless-stopped
-
-  # Bear detector (YOLO exported to ONNX). Only ever sees the already
-  # re-encoded image, never the user's original bytes. No internet access.
-  detector:
-    build: ./detector
-    environment:
-      BEAR_CONFIDENCE_THRESHOLD: ${BEAR_CONFIDENCE_THRESHOLD:-0.85}
-    networks: [internal]
-    mem_limit: 1g
-    restart: unless-stopped
 
   db:
     image: mysql:8.4
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    command:
-      # Keep MySQL small enough for a Raspberry Pi 4.
-      - --innodb-buffer-pool-size=128M
-      - --performance-schema=OFF
-      - --max-connections=50
+    command: ["--innodb-buffer-pool-size=128M", "--performance-schema=OFF"]
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
-      interval: 5s
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 3s
       timeout: 5s
-      retries: 20
-    networks: [internal]
-    restart: unless-stopped
-
-  # Dev-only: Vite dev server with hot reload. `docker compose --profile dev up`
-  frontend-dev:
-    profiles: [dev]
-    build:
-      context: ./frontend
-      target: dev
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    networks: [edge]
-
-networks:
-  edge: {}
-  internal:
-    internal: true
+      retries: 40
 
 volumes:
+  bundle:
+  frontend_node_modules:
   db_data:
-  uploads:
-  media:
-  caddy_data:
-  frontend_dist:

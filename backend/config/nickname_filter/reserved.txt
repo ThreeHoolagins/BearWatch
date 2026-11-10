@@ -1,0 +1,16 @@
+# Names nobody may register because they look official. A plain word blocks
+# only that exact nickname (ignoring underscores, digits and leetspeak), so
+# "ranger" and "R4nger_1" are blocked but "ram_ranger" is fine. Prefix with
+# "*" to block the word anywhere in a nickname.
+*admin
+*moderator
+*bearwatch
+mod
+mods
+staff
+official
+support
+ranger
+rangers
+root
+system

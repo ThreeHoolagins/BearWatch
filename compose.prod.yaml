@@ -1,0 +1,78 @@
+# Production stack:  docker compose -f compose.prod.yaml up -d --build
+#
+# Networks:
+#   edge     - normal bridge network (proxy + web; web needs outbound access
+#              to talk to Google/GitHub during sign-in).
+#   internal - `internal: true`: nothing on it can reach the internet.
+#              The database lives here; the image worker and bear detector
+#              will join it in Phase 2 (no outbound network for libvips/ML).
+
+name: bearwatch
+
+services:
+  proxy:
+    build:
+      context: .
+      dockerfile: infra/caddy/Dockerfile
+    environment:
+      APP_HOST: ${APP_HOST:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - media:/srv/media:ro
+    depends_on:
+      - web
+    networks: [edge]
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./backend
+      target: prod
+    env_file: .env
+    environment:
+      DATABASE_HOST: db
+      DATABASE_USERNAME: ${MYSQL_USER}
+      DATABASE_PASSWORD: ${MYSQL_PASSWORD}
+      DATABASE_NAME: ${MYSQL_DATABASE}
+    volumes:
+      - media:/rails/storage/media
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [edge, internal]
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    command:
+      # Keep MySQL small enough for a Raspberry Pi 4 or a free-tier VM.
+      - --innodb-buffer-pool-size=128M
+      - --performance-schema=OFF
+      - --max-connections=50
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    networks: [internal]
+    restart: unless-stopped
+
+networks:
+  edge: {}
+  internal:
+    internal: true
+
+volumes:
+  db_data:
+  media:
+  caddy_data:

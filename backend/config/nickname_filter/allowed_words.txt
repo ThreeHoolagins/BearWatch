@@ -1,0 +1,18 @@
+# Innocent words that contain a blocked word. These are removed before the
+# blocked-word check so e.g. "grape_bear" or "button_nose" aren't rejected.
+grape
+drape
+scrape
+button
+butte
+spice
+canal
+banal
+analy
+therapist
+peacock
+cockatoo
+cockpit
+hancock
+shitake
+assassin

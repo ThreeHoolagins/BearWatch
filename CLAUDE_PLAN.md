@@ -4,7 +4,8 @@ Companion to `HUMAN_PROJECT_PLAN.md` (Caleb's plan; never edited by agents).
 This doc records decisions as we make them, open questions, and build phases.
 
 ## Status
-- **Phase 0 (in progress):** repo, Docker skeleton, design mockups.
+- **Phase 0 (done):** repo, Docker skeleton, design mockups.
+- **Phase 1 (done, branch `phase-1-auth`):** Rails 8 API + React SPA; SSO sign-in (Google, GitHub, dev-only developer login), nickname sign-up with live checks and a blocklist, account linking, ban screen, Terms modal, signpost/tab shell. Feeds, posting and admin screens are placeholders until their phases.
 - Mockup: `docs/design/mockups.html`, a full clickable site in direction B (desktop + mobile).
   Serve the repo root (`python -m http.server 8787`) and open `/docs/design/mockups.html`.
 
@@ -27,6 +28,8 @@ This doc records decisions as we make them, open questions, and build phases.
 | D14 | Fat Bear Week card | Champion card is **edited in the admin panel**, not derived from posts: year, bear name/number, blurb, and either a Bear Watch post *or* an outside photo with credit + link (the real winner usually won't be on our site). Shown in the desktop right column and as a tappable banner on mobile feeds. |
 | D15 | Sign out | Desktop: dropdown from the nickname in the header (My profile, Admin panel, Terms, Sign out). Mobile: on your own profile page. |
 | D16 | Terms of Service | Opens as a modal with a scrolling body and a Close button bottom-right. Linked from login, nickname, sidebar, rail, menu, profile and banned screens. |
+| D17 | Nickname filter | Format/length checks plus a blocklist: LDNOOBW English list (CC BY 4.0) with leetspeak normalisation, an allowlist for innocent words ("grape", "button"), and reserved names (`*admin`, `*bearwatch`, `*moderator` anywhere; `ranger`, `staff`, etc. only as the whole name). Lists live in `backend/config/nickname_filter/`. |
+| D18 | Sign-up window | After SSO for a new account, the person has 30 minutes to pick a nickname before starting over. |
 | D11 | Bear check | `earthtoolsmaker/bear-conservation` **detect step only**, 85% confidence threshold. |
 
 ## Architecture (current draft)
@@ -38,6 +41,8 @@ browser ──> Caddy (TLS, serves SPA + /media) ──> Rails API (web)  ──
                                                       Solid Queue worker (libvips) ──> detector (ONNX)
 ```
 
+- **Dev:** `docker compose up` (Vite :5173 proxies `/api` + `/auth` to Rails :3000). **Prod:** `compose.prod.yaml` (Caddy image with the built SPA baked in).
+- **Sessions:** Rails encrypted cookie session (HttpOnly, SameSite=Lax, Secure in prod). Writes need the CSRF token from `GET /api/session` in an `X-CSRF-Token` header; starting SSO is a form POST with the same token.
 - **Single origin** (Caddy): SPA, `/api`, `/auth`, `/media` on one host, so the
   session cookie is HttpOnly + SameSite=Lax with no CORS.
 - **Jobs:** Solid Queue (DB-backed), so there's no Redis to run on a small box.
@@ -51,8 +56,8 @@ browser ──> Caddy (TLS, serves SPA + /media) ──> Rails API (web)  ──
 
 ## Data model (draft)
 
-- `users`: id, nickname (unique, 3-20), avatar_post_id (nullable), is_admin, banned_at, ban_reason, timestamps
-- `identities`: id, user_id, provider (`google`/`github`), provider_uid; unique(provider, provider_uid)
+- `users` *(built)*: id, nickname (unique, case-insensitive, 3-20), is_admin, banned_at, ban_reason, timestamps. `avatar_post_id` comes with posts.
+- `identities` *(built)*: id, user_id, provider (`google_oauth2`/`github`/`developer`), uid; unique(provider, uid) and unique(user_id, provider)
 - `posts`: id, user_id, image_key, place_name, lat (rounded), lng (rounded), status (`processing`/`published`/`rejected`), timestamps
 - `fat_bear_wins`: id, post_id, year, awarded_by (user_id)
 - `fat_bear_champions`: id, year (unique), bear_name, bear_number, blurb, post_id (nullable), image_key (nullable, for outside photos), credit, link_url, link_text
@@ -68,9 +73,13 @@ browser ──> Caddy (TLS, serves SPA + /media) ──> Rails API (web)  ──
 - **Q6 Blob storage:** Local disk first; Cloudflare R2 (10 GB free, no egress fees) as the cloud option?
 - **Q7 Rate limit:** 1 upload/min/user plus a daily cap?
 
+## Notes
+- `json` gem is pinned to 2.x: json 3.x breaks Rails 8.0's cookie encoder. Revisit when upgrading Rails.
+- Fonts are self-hosted (`@fontsource`), so no requests go to Google Fonts.
+
 ## Phases
-0. Repo, Docker skeleton, mockups, plan *(now)*
-1. Scaffold Rails API + React (Vite) SPA; SSO login, nickname, ban screen
+0. Repo, Docker skeleton, mockups, plan *(done)*
+1. Scaffold Rails API + React (Vite) SPA; SSO login, nickname, ban screen *(done)*
 2. Upload pipeline: worker + libvips + detector
 3. Feeds (Global/Following), profiles, follow
 4. Admin panel (bans, Fat Bear wins)
