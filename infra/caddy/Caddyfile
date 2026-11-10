@@ -1,0 +1,22 @@
+# Single origin: SPA, API, auth and media all under one host, so the session
+# cookie can be HttpOnly + SameSite=Lax with no CORS.
+{$APP_HOST:localhost} {
+	encode zstd gzip
+
+	handle /api/* {
+		reverse_proxy web:3000
+	}
+	handle /auth/* {
+		reverse_proxy web:3000
+	}
+	handle /media/* {
+		root * /srv
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+	handle {
+		root * /srv/app
+		try_files {path} /index.html
+		file_server
+	}
+}

@@ -1,0 +1,33 @@
+# Secrets
+.env
+*.key
+backend/config/master.key
+backend/config/credentials/*.key
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Node / frontend
+node_modules/
+frontend/dist/
+
+# Rails
+backend/log/*
+backend/tmp/*
+backend/storage/*
+!backend/log/.keep
+!backend/tmp/.keep
+!backend/storage/.keep
+backend/vendor/bundle/
+
+# Python / detector
+__pycache__/
+*.pyc
+.venv/
+detector/models/*.pt
+
+# Local data
+data/

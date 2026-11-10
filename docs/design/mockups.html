@@ -1,0 +1,915 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BearWatch: full-site mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Zilla+Slab:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Poppins, system-ui, sans-serif; }
+
+  /* ---------- mockup chrome (not part of the app) ---------- */
+  .controls { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 14px; align-items: center; font-size: 13px; }
+  .controls .grp { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .controls span { opacity: .7; margin-right: 2px; }
+  .controls button { font: inherit; font-size: 12px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border, #ccc); background: transparent; color: inherit; cursor: pointer; }
+  .controls button.on { background: var(--foreground, #222); color: var(--background, #fff); }
+  .stage { position: relative; overflow: hidden; }
+  .device { position: absolute; top: 0; left: 0; transform-origin: top left; }
+  .device.desktop { width: 1280px; height: 836px; border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
+  .device.desktop .chrome { height: 36px; background: #2b2b2b; display: flex; align-items: center; gap: 8px; padding: 0 14px; }
+  .device.desktop .chrome i { width: 11px; height: 11px; border-radius: 50%; background: #5a5a5a; }
+  .device.desktop .chrome .url { margin-left: 18px; flex: 0 1 460px; background: #1a1a1a; color: #bbb; font-size: 12px; padding: 4px 12px; border-radius: 6px; }
+  .device.desktop .app { height: 800px; }
+  .device.mobile { width: 375px; height: 760px; border-radius: 34px; overflow: hidden; box-shadow: 0 0 0 9px #151515; margin: 9px; }
+  .device.mobile .chrome { display: none; }
+  .device.mobile .app { height: 100%; }
+
+  /* ================= the app ================= */
+  .app {
+    --paper: #EFE4CB; --ink: #2a211b; --surface: #F8F1E0; --forest: #1F3B2D; --sage: #7C9A7E; --wood: #6B4A2F; --wood-dark: #4a3220;
+    --cream: #F2E6CC; --gold: #D4A23C; --ok: #2f6b45; --bad: #9c3219;
+    container: app / inline-size;
+    position: relative; overflow: hidden; color: var(--ink); font-size: 14px;
+    background: repeating-linear-gradient(0deg, rgba(107,74,47,.035) 0 2px, transparent 2px 5px), var(--paper);
+  }
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  .scroll { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .desk { display: none !important; }
+  h1, h2, h3 { font-family: 'Zilla Slab', serif; color: var(--forest); }
+  a, .link { color: var(--wood); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+
+  /* header band */
+  .band { position: relative; z-index: 4; background: var(--forest); color: var(--cream); display: flex; align-items: center; gap: 10px; padding: 10px 16px; min-height: 56px; border-bottom: 4px solid var(--wood); flex: none; }
+  .band .mark { width: 32px; height: 32px; overflow: hidden; border-radius: 50%; flex: none; }
+  .band .mark img { height: 32px; display: block; }
+  .band .t { font-family: 'Zilla Slab', serif; font-weight: 700; font-size: 20px; letter-spacing: .06em; text-transform: uppercase; }
+  .band .back { background: none; border: 0; color: var(--cream); font-size: 26px; line-height: 1; padding: 0 4px 0 0; cursor: pointer; }
+  .band .me { margin-left: auto; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: none; border: 0; color: inherit; font-family: inherit; padding: 4px 8px; border-radius: 8px; }
+  .band .me:hover, .band .me.open { background: rgba(242,230,204,.12); }
+  .band .me .caret { font-size: 10px; opacity: .8; }
+  .menu { position: absolute; right: 14px; top: 58px; width: 220px; background: var(--surface); color: var(--ink); border: 3px double var(--forest); border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,.18); padding: 6px; z-index: 6; }
+  .menu button { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; background: none; border: 0; padding: 10px 12px; border-radius: 6px; font: inherit; font-size: 14px; cursor: pointer; color: inherit; }
+  .menu button:hover { background: rgba(31,59,45,.08); }
+  .menu .ico { width: 18px; height: 18px; }
+  .menu hr { border: 0; border-top: 1px dashed rgba(31,59,45,.3); margin: 4px 6px; }
+  .menu .danger { color: var(--bad); }
+
+  /* buttons */
+  .sso { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; margin-bottom: 12px; cursor: pointer; border: 0; border-radius: 6px;
+         font-family: 'Zilla Slab', serif; font-size: 17px; font-weight: 600; letter-spacing: .04em; color: var(--cream); background: var(--wood);
+         box-shadow: inset 0 0 0 3px var(--wood), inset 0 0 0 4.5px rgba(242,230,204,.55), 0 3px 0 var(--wood-dark); }
+  .sso svg { width: 18px; height: 18px; flex: none; }
+  .sso .gbadge { background: var(--cream); border-radius: 50%; padding: 3px; width: 24px; height: 24px; display: grid; place-items: center; }
+  .sso.dark { background: var(--forest); box-shadow: inset 0 0 0 3px var(--forest), inset 0 0 0 4.5px rgba(242,230,204,.55), 0 3px 0 #10241a; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; cursor: pointer; border: 0; border-radius: 6px;
+         font-family: 'Zilla Slab', serif; font-size: 16px; font-weight: 600; background: var(--forest); color: var(--cream); box-shadow: 0 3px 0 #10241a; }
+  .btn.wide { width: 100%; padding: 12px; font-size: 17px; }
+  .btn.wood { background: var(--wood); box-shadow: 0 3px 0 var(--wood-dark); }
+  .btn.gold { background: var(--gold); color: var(--forest); box-shadow: 0 3px 0 #9c7524; }
+  .btn.ghost { background: transparent; color: var(--forest); box-shadow: inset 0 0 0 2px var(--forest); }
+  .btn.danger { background: var(--bad); box-shadow: 0 3px 0 #5e1d0e; }
+  .btn.ghost.danger { background: transparent; color: var(--bad); box-shadow: inset 0 0 0 2px var(--bad); }
+  .btn.sm { padding: 6px 12px; font-size: 14px; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .btn .ico { width: 18px; height: 18px; }
+  .fine { font-size: 11px; opacity: .75; margin-top: 12px; line-height: 1.5; }
+
+  /* ----- login ----- */
+  .login { flex: 1; display: grid; min-height: 0; }
+  .login-hero { display: none; }
+  .login-panel { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 28px; text-align: center; overflow-y: auto; }
+  .login-panel .logo { width: 190px; height: 190px; }
+  .login-panel h1 { margin: 0 0 4px; font-size: 32px; }
+  .lede { font-size: 14px; line-height: 1.55; margin: 22px 0; }
+  .login-panel .inner { width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; }
+
+  /* ----- card screens (nickname / banned) ----- */
+  .cardwrap { flex: 1; display: flex; justify-content: center; align-items: flex-start; padding: 40px 26px; overflow-y: auto; }
+  .card { width: 100%; max-width: 440px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .card h1 { font-size: 28px; margin: 0 0 6px; }
+  .field { width: 100%; text-align: left; margin-bottom: 14px; position: relative; }
+  .field label { display: block; font-family: 'Zilla Slab', serif; font-size: 15px; font-weight: 600; color: var(--forest); margin-bottom: 6px; }
+  .field .row { position: relative; }
+  .field input, .field textarea, .field select { width: 100%; font: inherit; font-size: 15px; padding: 11px 12px; outline: none; border: 2px solid var(--forest); border-radius: 6px; background: var(--surface); color: var(--ink); }
+  .field textarea { resize: vertical; min-height: 80px; }
+  .field input:focus, .field textarea:focus { box-shadow: 0 0 0 3px rgba(212,162,60,.45); }
+  .field .count { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 12px; opacity: .6; }
+  .field .hint { font-size: 12px; opacity: .75; margin-top: 6px; line-height: 1.45; }
+  .msg { min-height: 18px; font-size: 12px; margin-top: 6px; }
+  .msg.ok { color: var(--ok); } .msg.bad { color: var(--bad); }
+  .banicon { width: 84px; height: 84px; margin-bottom: 14px; }
+  .reason { width: 100%; text-align: left; padding: 14px; margin: 18px 0 8px; font-size: 13px; line-height: 1.5; background: var(--surface); border: 3px double var(--bad); border-radius: 10px; }
+  .reason small { display: block; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .7; margin-bottom: 4px; }
+
+  /* ----- signed-in shell ----- */
+  .layout { flex: 1; min-height: 0; display: block; }
+  .main { padding-bottom: 16px; }
+  .pagehead { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px 10px; }
+  .pagehead h2 { margin: 0; font-size: 26px; }
+  .pad { padding: 0 14px; }
+  .near { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; background: var(--wood); color: var(--cream); padding: 4px 9px; border-radius: 4px; white-space: nowrap; }
+  .near svg { width: 12px; height: 12px; }
+  .panel { background: var(--surface); border: 3px double var(--forest); border-radius: 12px; }
+  .locask { margin: 4px 14px 16px; padding: 16px; text-align: center; font-size: 13px; line-height: 1.5; }
+  .empty { margin: 4px 14px 16px; padding: 26px 18px; text-align: center; font-size: 13px; line-height: 1.55; }
+  .empty h3 { margin: 6px 0; font-size: 20px; }
+
+  .post { margin: 0 14px 16px; overflow: hidden; }
+  .post .who { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; }
+  .post .who b { font-family: 'Zilla Slab', serif; font-size: 16px; }
+  .post .who time { margin-left: auto; font-size: 11px; opacity: .6; }
+  .post .photo { cursor: pointer; }
+  .where { display: flex; align-items: center; gap: 5px; padding: 9px 12px 12px; font-family: 'Zilla Slab', serif; font-size: 14px; font-weight: 600; color: var(--wood); border-top: 1px dashed rgba(31,59,45,.35); }
+  .where svg { width: 13px; height: 13px; flex: none; }
+  .winbadge { display: inline-flex; align-items: center; gap: 5px; background: var(--gold); color: var(--forest); font-family: 'Zilla Slab', serif; font-weight: 700; font-size: 12px; padding: 3px 8px; border-radius: 4px; }
+  .winbadge svg { width: 14px; height: 14px; }
+  .photo .winbadge { position: absolute; top: 8px; left: 8px; z-index: 1; }
+
+  .av { width: 32px; height: 32px; border-radius: 50%; flex: none; overflow: hidden; display: grid; place-items: center; background: var(--forest); border: 2px solid var(--gold); position: relative; }
+  .av > svg { width: 70%; height: 70%; fill: var(--cream); }
+  .av.xl { width: 84px; height: 84px; border-width: 3px; }
+  .av.photo .bear { transform: scale(2.6); transform-origin: 84% 40%; }
+  .av.photo .bear.flip { transform: scaleX(-1) scale(2.6); }
+
+  .photo { position: relative; aspect-ratio: 1 / 1; overflow: hidden; }
+  .photo .bear { position: absolute; width: 58%; left: 21%; bottom: 16%; fill: #2e2118; }
+  .photo .bear.flip { transform: scaleX(-1); }
+  .s1 { background: linear-gradient(#a9c0c4 0 30%, #6f8f6a 30% 55%, #4f7381 55%); }
+  .s2 { background: linear-gradient(#e8dcb2 0 35%, #b9a55c 35% 60%, #8d7b3b 60%); }
+  .s3 { background: linear-gradient(#5d7a5e 0 45%, #3b5640 45% 70%, #2c4030 70%); }
+  .s4 { background: linear-gradient(#dfe7ea 0 40%, #aab8b5 40% 62%, #e9eef0 62%); }
+  .s5 { background: linear-gradient(#f0c9a0 0 32%, #a07a5a 32% 58%, #6d8a6a 58%); }
+  .s2 .bear { fill: #5a3a22; } .s3 .bear { fill: #1a1410; } .s4 .bear { fill: #4a3324; } .s5 .bear { fill: #3a2616; }
+
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); padding: 6px 4px 14px; background: var(--forest); color: rgba(242,230,204,.6); border-top: 4px solid var(--wood); flex: none; }
+  .tabs button { background: none; border: 0; font-family: 'Zilla Slab', serif; font-size: 12px; font-weight: 600; letter-spacing: .04em; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; cursor: pointer; color: inherit; }
+  .tabs button.on { color: var(--gold); }
+  .ico { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* signpost nav (desktop) */
+  .side { position: relative; padding: 26px 0 0 28px; flex-direction: column; }
+  .side::before { content: ""; position: absolute; left: 58px; top: 18px; bottom: 0; width: 14px; background: linear-gradient(90deg, #5a3d26, var(--wood) 40%, #5a3d26); border-radius: 3px 3px 0 0; }
+  .plank { position: relative; display: flex; align-items: center; gap: 10px; width: 200px; margin-bottom: 14px; padding: 11px 26px 11px 14px; white-space: nowrap; border: 0; cursor: pointer;
+           font-family: 'Zilla Slab', serif; font-size: 18px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--cream); background: var(--wood);
+           clip-path: polygon(0 0, 86% 0, 100% 50%, 86% 100%, 0 100%); text-align: left; }
+  .plank:nth-child(even) { margin-left: 10px; }
+  .plank .ico { width: 20px; height: 20px; }
+  .plank.on { background: var(--forest); color: var(--gold); }
+  .plank.post-cta { background: var(--gold); color: var(--forest); }
+  .plank.post-cta.on { box-shadow: inset 0 0 0 3px var(--forest); }
+  .rail { display: none; }
+  .rcard { padding: 14px; margin-bottom: 16px; font-size: 13px; line-height: 1.5; }
+  .rcard h3 { margin: 0 0 8px; font-size: 19px; display: flex; align-items: center; gap: 8px; }
+  .rcard h3 svg { width: 22px; height: 22px; }
+  .rcard .photo { border-radius: 8px; margin-bottom: 8px; }
+  .rcard ol { margin: 0; padding-left: 20px; }
+  .rcard ol li { margin-bottom: 4px; }
+  .champ .name { font-family: 'Zilla Slab', serif; font-size: 18px; font-weight: 700; color: var(--forest); }
+  .champ .credit { font-size: 11px; opacity: .8; margin-top: 6px; }
+  .rail .foot { font-size: 11px; opacity: .6; padding: 0 4px; }
+  .champ-mob { margin: 0 14px 16px; padding: 10px; display: flex; gap: 12px; align-items: center; cursor: pointer; }
+  .champ-mob .photo { width: 58px; border-radius: 8px; flex: none; }
+  .champ-mob .k { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--wood); display: flex; align-items: center; gap: 4px; }
+  .champ-mob .k svg { width: 14px; height: 14px; }
+  .champ-mob .name { font-family: 'Zilla Slab', serif; font-size: 17px; font-weight: 700; color: var(--forest); }
+
+  /* ----- post form ----- */
+  .drop { margin: 4px 14px 16px; padding: 34px 18px; text-align: center; border: 2px dashed var(--wood); border-radius: 12px; background: rgba(248,241,224,.7); cursor: pointer; }
+  .drop .big { width: 54px; height: 54px; color: var(--wood); margin-bottom: 6px; }
+  .drop h3 { margin: 4px 0; font-size: 20px; }
+  .drop p { margin: 4px 0 14px; font-size: 13px; opacity: .8; }
+  .preview { margin: 4px 14px 14px; overflow: hidden; }
+  .preview .bar { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; font-size: 12px; border-top: 1px dashed rgba(31,59,45,.35); }
+  .okchip { display: inline-flex; align-items: center; gap: 5px; color: var(--ok); font-weight: 600; }
+  .okchip svg { width: 14px; height: 14px; }
+  .suggest { position: absolute; left: 0; right: 0; top: 100%; margin-top: -10px; z-index: 3; background: var(--surface); border: 2px solid var(--forest); border-top: 0; border-radius: 0 0 8px 8px; max-height: 210px; overflow-y: auto; }
+  .suggest button { width: 100%; display: flex; align-items: center; gap: 8px; text-align: left; background: none; border: 0; padding: 9px 12px; font: inherit; font-size: 13px; cursor: pointer; color: inherit; }
+  .suggest button:hover { background: rgba(31,59,45,.08); }
+  .suggest button svg { width: 14px; height: 14px; color: var(--wood); flex: none; }
+  .suggest .here { font-weight: 600; color: var(--forest); border-bottom: 1px dashed rgba(31,59,45,.3); }
+  .formpad { padding: 0 14px; }
+  .checking { margin: 30px 14px; padding: 34px 20px; text-align: center; }
+  .spin { width: 46px; height: 46px; margin: 0 auto 14px; border: 4px solid rgba(31,59,45,.18); border-top-color: var(--forest); border-radius: 50%; animation: sp .9s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  .steps { list-style: none; margin: 14px auto 0; padding: 0; max-width: 260px; text-align: left; font-size: 13px; }
+  .steps li { padding: 3px 0; opacity: .5; }
+  .steps li.done { opacity: 1; color: var(--ok); }
+  .steps li.now { opacity: 1; font-weight: 600; }
+  .oops { margin: 4px 14px 16px; padding: 22px 18px; text-align: center; border-color: var(--bad) !important; }
+  .oops h3 { color: var(--bad); margin: 8px 0; font-size: 21px; }
+  .oops p { font-size: 14px; line-height: 1.55; margin: 0 0 16px; }
+
+  /* ----- profile ----- */
+  .phead { display: flex; gap: 16px; align-items: center; padding: 18px 16px 8px; }
+  .phead h2 { margin: 0 0 8px; font-size: 24px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .adminchip { font-family: Poppins, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; background: var(--forest); color: var(--gold); padding: 3px 7px; border-radius: 4px; }
+  .stats { display: grid; grid-template-columns: repeat(3, auto); gap: 14px; justify-content: start; }
+  .stats div { text-align: left; }
+  .stats b { display: flex; align-items: center; gap: 4px; font-family: 'Zilla Slab', serif; font-size: 20px; color: var(--forest); line-height: 1.1; }
+  .stats b svg { width: 16px; height: 16px; }
+  .stats small { font-size: 11px; opacity: .75; }
+  .pactions { display: flex; gap: 8px; padding: 8px 16px 16px; flex-wrap: wrap; }
+  .pactions .btn { flex: 1; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
+  .grid3 .photo { cursor: pointer; }
+  .grid3 .photo .winbadge { top: 5px; left: 5px; padding: 3px; }
+  .grid3 .photo .winbadge span { display: none; }
+  .ptitle { display: flex; align-items: center; gap: 8px; padding: 6px 16px 10px; font-family: 'Zilla Slab', serif; font-weight: 700; color: var(--forest); font-size: 16px; border-top: 1px dashed rgba(31,59,45,.35); padding-top: 14px; }
+  .meonly { padding: 18px 16px 0; display: flex; flex-direction: column; gap: 10px; }
+  .meonly .fine { text-align: center; margin: 0; }
+
+  /* ----- admin ----- */
+  .atabs { display: flex; gap: 8px; padding: 0 14px 14px; }
+  .atabs button { flex: 1; padding: 9px 10px; border-radius: 6px; border: 2px solid var(--forest); background: transparent; color: var(--forest); font-family: 'Zilla Slab', serif; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .atabs button.on { background: var(--forest); color: var(--gold); }
+  .ulist { margin: 0 14px 16px; overflow: hidden; }
+  .urow { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-bottom: 1px dashed rgba(31,59,45,.3); }
+  .urow:last-child { border-bottom: 0; }
+  .urow .info { flex: 1; min-width: 0; }
+  .urow .info b { font-family: 'Zilla Slab', serif; font-size: 16px; cursor: pointer; }
+  .urow .meta { font-size: 11px; opacity: .7; }
+  .urow .why { font-size: 12px; color: var(--bad); margin-top: 2px; }
+  .status { font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 3px 7px; border-radius: 4px; margin-left: 6px; vertical-align: 2px; }
+  .status.active { background: rgba(47,107,69,.15); color: var(--ok); }
+  .status.banned { background: rgba(156,50,25,.15); color: var(--bad); }
+  .fbw { display: grid; gap: 16px; padding: 0 14px 16px; }
+  .fbw .form { padding: 16px; }
+  .fbw .form h3 { margin: 0 0 12px; font-size: 19px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .radios { display: flex; gap: 8px; margin-bottom: 14px; }
+  .radios label { flex: 1; display: flex; gap: 8px; align-items: center; padding: 9px 10px; border: 2px solid rgba(31,59,45,.35); border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .radios label.on { border-color: var(--forest); background: rgba(31,59,45,.06); font-weight: 600; }
+  .uploadrow { display: flex; gap: 10px; align-items: center; }
+  .uploadrow .photo { width: 64px; border-radius: 6px; flex: none; }
+  .winlist .urow .photo { width: 46px; border-radius: 6px; flex: none; cursor: pointer; }
+  .previewlabel { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .7; margin: 0 0 8px; }
+
+  /* ----- modals ----- */
+  .scrim { position: absolute; inset: 0; z-index: 10; background: rgba(20,28,22,.55); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .modal { position: relative; width: 100%; max-width: 520px; max-height: 100%; display: flex; flex-direction: column; background: var(--surface); border: 3px double var(--forest); border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,.35); overflow: hidden; }
+  .modal.sm { max-width: 420px; }
+  .modal .mhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; border-bottom: 1px dashed rgba(31,59,45,.35); flex: none; }
+  .modal .mhead h3 { margin: 0; font-size: 21px; }
+  .modal .x { background: none; border: 0; font-size: 26px; line-height: 1; cursor: pointer; color: var(--forest); padding: 0 4px; }
+  .modal .mbody { padding: 16px; overflow-y: auto; min-height: 0; font-size: 13px; line-height: 1.6; }
+  .modal .mfoot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px dashed rgba(31,59,45,.35); flex: none; }
+  .tos h4 { font-family: 'Zilla Slab', serif; color: var(--forest); font-size: 16px; margin: 16px 0 4px; }
+  .tos h4:first-of-type { margin-top: 4px; }
+  .tos p { margin: 0 0 8px; }
+  .tos .draft { background: rgba(212,162,60,.2); border-left: 4px solid var(--gold); padding: 8px 10px; font-size: 12px; margin-bottom: 10px; }
+  .modal.postm .mbody { padding: 0; }
+  .modal.postm .who { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .modal.postm .who b { font-family: 'Zilla Slab', serif; font-size: 17px; }
+  .postm .meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px 12px; font-size: 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .chips button { font: inherit; font-size: 12px; padding: 5px 10px; border-radius: 999px; border: 1.5px solid var(--forest); background: transparent; color: var(--forest); cursor: pointer; }
+  .chips button:hover { background: rgba(31,59,45,.08); }
+  .avpick { display: grid; gap: 16px; }
+  .avprev { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .avprev .ring { width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 4px solid var(--gold); background: var(--forest); display: grid; place-items: center; position: relative; }
+  .avprev .ring > svg { width: 70%; height: 70%; fill: var(--cream); }
+  .avprev .ring .photo { position: absolute; inset: 0; aspect-ratio: auto; }
+  .avprev input[type=range] { width: 180px; accent-color: var(--forest); }
+  .avgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .avgrid > div { border-radius: 6px; overflow: hidden; cursor: pointer; outline: 3px solid transparent; outline-offset: -3px; aspect-ratio: 1; }
+  .avgrid > div.on { outline-color: var(--gold); }
+  .avgrid .blank { background: var(--forest); display: grid; place-items: center; }
+  .avgrid .blank svg { width: 55%; fill: var(--cream); }
+
+  .toast { position: absolute; left: 50%; bottom: 90px; transform: translateX(-50%); background: #111; color: #fff; font-size: 12px; padding: 8px 13px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; z-index: 20; }
+  .toast.show { opacity: 1; }
+
+  /* ================= desktop (container ≥ 820px) ================= */
+  @container app (min-width: 820px) {
+    .desk { display: flex !important; }
+    .mob { display: none !important; }
+    .tabs { display: none; }
+
+    .login { grid-template-columns: 1.15fr 1fr; }
+    .login-hero { display: flex; position: relative; flex-direction: column; align-items: center; justify-content: center; background: var(--forest); color: var(--cream); overflow: hidden; border-right: 6px solid var(--wood); padding-bottom: 90px; }
+    .login-hero .logo { width: 340px; height: 340px; position: relative; z-index: 1; }
+    .login-hero .tag { position: relative; z-index: 1; font-family: 'Zilla Slab', serif; font-size: 22px; letter-spacing: .08em; text-transform: uppercase; margin-top: 18px; opacity: .9; }
+    .login-hero .ridge { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 220px; }
+    .login-panel .inner { max-width: 400px; align-items: stretch; text-align: left; }
+    .login-panel .lede { margin: 6px 0 28px; font-size: 15px; }
+
+    .cardwrap { align-items: center; padding: 40px; }
+    .card { background: var(--surface); border: 3px double var(--forest); border-radius: 14px; padding: 36px 40px; box-shadow: 0 10px 30px rgba(31,59,45,.12); }
+
+    .layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); overflow-y: auto; scrollbar-width: none; }
+    .layout::-webkit-scrollbar { display: none; }
+    .side { position: sticky; top: 0; align-self: start; height: 740px; }
+    .side .tos-link { position: relative; margin: 18px 0 0 96px; font-size: 12px; }
+    .main { max-width: 560px; width: 100%; margin: 0 auto; padding: 8px 0 28px; }
+    .main.wide { max-width: 860px; padding-right: 28px; }
+    .pagehead { padding: 18px 0 14px; }
+    .pagehead h2 { font-size: 34px; }
+    .pad, .formpad { padding: 0; }
+    .near { font-size: 12px; padding: 5px 11px; }
+    .locask, .empty, .drop, .preview, .checking, .oops, .ulist, .champ-mob { margin-left: 0; margin-right: 0; }
+    .post { margin: 0 0 22px; }
+    .post .who { padding: 12px 14px; }
+    .post .who .av { width: 36px; height: 36px; }
+
+    .phead { padding: 22px 0 10px; gap: 28px; }
+    .phead h2 { font-size: 32px; }
+    .av.xl { width: 128px; height: 128px; }
+    .stats { gap: 32px; }
+    .stats b { font-size: 24px; }
+    .pactions { padding: 8px 0 18px; }
+    .pactions .btn { flex: 0 0 auto; }
+    .grid3 { gap: 8px; }
+    .grid3 .photo { border-radius: 6px; }
+    .grid3 .photo .winbadge { padding: 3px 8px; top: 8px; left: 8px; }
+    .grid3 .photo .winbadge span { display: inline; }
+    .ptitle { padding-left: 0; padding-right: 0; }
+
+    .atabs { padding: 0 0 16px; max-width: 360px; }
+    .fbw { grid-template-columns: minmax(0, 1fr) 300px; padding: 0 0 16px; align-items: start; }
+    .avpick { grid-template-columns: 200px 1fr; align-items: start; }
+  }
+  @container app (min-width: 1150px) {
+    .layout.withrail { grid-template-columns: 250px minmax(0, 1fr) 300px; }
+    .withrail .rail { display: block; position: sticky; top: 0; align-self: start; padding: 26px 28px 0 0; }
+    .withrail .champ-mob { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="controls" id="controls">
+    <div class="grp" data-g="device"><span>Device:</span><button data-device="desktop" class="on">Desktop</button><button data-device="mobile">Mobile</button></div>
+    <div class="grp" data-g="route"><span>Screen:</span>
+      <button data-jump="login" class="on">Login</button><button data-jump="nickname">Nickname</button><button data-jump="global">Global</button><button data-jump="following">Following</button><button data-jump="post">Post</button><button data-jump="me">My profile</button><button data-jump="user:grizzwald">Other profile</button><button data-jump="admin">Admin</button><button data-jump="banned">Banned</button>
+    </div>
+    <div class="grp" data-g="detector"><span>Bear check:</span><button data-detector="pass" class="on">Finds a bear</button><button data-detector="fail">Too blurry</button></div>
+  </div>
+  <div class="stage"><div class="device desktop"><div class="chrome"><i></i><i></i><i></i><div class="url">bearwatch.app</div></div><div class="app"></div></div></div>
+
+<script>
+const LOGO = "../../assets/logos/bearwatch-logo.svg";
+const CORNER = "../../assets/logos/bearwatch-corner-logo.svg";
+
+const ICON = {
+  google: '<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.570-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>',
+  github: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>',
+  locate: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>',
+  bearhead: '<svg viewBox="0 0 40 40"><circle cx="9" cy="10" r="6"/><circle cx="31" cy="10" r="6"/><circle cx="20" cy="22" r="15"/></svg>',
+  bear: '<svg class="bear" viewBox="0 0 120 70"><path d="M8,64 C6,44 16,30 36,27 C50,19 76,18 90,27 C96,22 106,23 111,31 C117,34 119,41 114,45 L105,47 C103,52 101,58 101,66 L92,66 L89,53 C79,57 61,57 49,55 L47,66 L38,66 L36,55 C31,57 27,61 27,66 L17,66 Z"/><circle cx="99" cy="24" r="4.5"/></svg>',
+  camera: '<svg class="big" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="4"/></svg>',
+  Global: '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18"/></svg>',
+  Following: '<svg class="ico" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17" cy="9" r="2.8"/><path d="M16 14.6c2.9-.2 5 1.5 5.5 4.6"/></svg>',
+  Post: '<svg class="ico" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M12 8v8M8 12h8"/></svg>',
+  Profile: '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c.8-4.2 4-6.5 8-6.5s7.2 2.3 8 6.5"/></svg>',
+  shield: '<svg class="ico" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/></svg>',
+  out: '<svg class="ico" viewBox="0 0 24 24"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg>',
+  doc: '<svg class="ico" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z M14 3v5h5 M9 12h7 M9 16h7"/></svg>',
+  trophy: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 3h12v3h3v2a5 5 0 0 1-4.6 5A6 6 0 0 1 13 16.9V19h3v2H8v-2h3v-2.1A6 6 0 0 1 7.6 13 5 5 0 0 1 3 8V6h3V3zm0 5H5a3 3 0 0 0 1.4 2.5A6 6 0 0 1 6 9V8zm12 0v1a6 6 0 0 1-.4 1.5A3 3 0 0 0 19 8h-1z"/></svg>',
+  tree: '<svg viewBox="0 0 24 24" fill="#1F3B2D"><path d="M12 2 5 11h3l-4 6h7v5h2v-5h7l-4-6h3z"/></svg>',
+  closed: '<svg class="banicon" viewBox="0 0 72 72"><rect x="33" y="30" width="6" height="40" fill="#6B4A2F"/><rect x="6" y="10" width="60" height="28" rx="4" fill="#9c3219"/><rect x="9" y="13" width="54" height="22" rx="2" fill="none" stroke="#F2E6CC" stroke-width="1.5"/><text x="36" y="29" text-anchor="middle" font-family="Zilla Slab, serif" font-weight="700" font-size="13" fill="#F2E6CC">CLOSED</text></svg>',
+  ridge: '<svg class="ridge" viewBox="0 0 600 220" preserveAspectRatio="none"><circle cx="470" cy="70" r="30" fill="#D4A23C" opacity=".85"/><path fill="#7C9A7E" opacity=".45" d="M0,220 L0,140 L90,70 L170,125 L265,40 L370,135 L455,80 L600,150 L600,220Z"/><path fill="#16301f" d="M0,220 L0,175 L60,150 L120,180 L200,140 L285,185 L385,150 L470,185 L540,160 L600,175 L600,220Z"/><g fill="#10241a"><path d="M40,190 l14,-34 l14,34z M70,195 l11,-26 l11,26z M520,192 l13,-32 l13,32z M548,196 l10,-24 l10,24z M300,198 l9,-22 l9,22z"/></g></svg>'
+};
+
+/* ---------------- demo data ---------------- */
+const ME = "you_the_ranger";
+const USERS = {
+  you_the_ranger: { av: "s3", avFlip: true, followers: 12, admin: true, joined: "Oct 2026" },
+  otis_superfan:  { av: "s1", followers: 48, following: 30, joined: "Sep 2026" },
+  trail_mix_tina: { av: null, followers: 131, following: 12, joined: "Aug 2026" },
+  grizzwald:      { av: "s3", followers: 22, following: 19, joined: "Sep 2026" },
+  ram_ranger:     { av: null, followers: 9, following: 4, joined: "Oct 2026" },
+  troll_bear_99:  { av: null, followers: 0, following: 1, joined: "Nov 2026" },
+};
+let POSTS = [
+  { id: 101, nick: "otis_superfan", scene: "s1", when: "12m", where: "Rocky Mountain National Park, CO" },
+  { id: 102, nick: "trail_mix_tina", scene: "s2", flip: 1, when: "1h", where: "Yellowstone National Park, WY", win: 2025 },
+  { id: 103, nick: "grizzwald", scene: "s3", when: "3h", where: "Grand Teton National Park, WY" },
+  { id: 104, nick: "ram_ranger", scene: "s4", flip: 1, when: "1d", where: "Fort Collins, CO" },
+  { id: 109, nick: "otis_superfan", scene: "s5", flip: 1, when: "2d", where: "Estes Park, CO" },
+  { id: 111, nick: "grizzwald", scene: "s1", flip: 1, when: "3d", where: "Yellowstone National Park, WY" },
+  { id: 105, nick: ME, scene: "s3", flip: 1, when: "2d", where: "Estes Park, CO", win: 2024 },
+  { id: 106, nick: ME, scene: "s1", when: "5d", where: "Rocky Mountain National Park, CO" },
+  { id: 107, nick: ME, scene: "s4", when: "1w", where: "Yellowstone National Park, WY" },
+  { id: 108, nick: ME, scene: "s2", flip: 1, when: "2w", where: "Glacier National Park, MT" },
+  { id: 110, nick: "trail_mix_tina", scene: "s4", when: "3d", where: "Grand Teton National Park, WY" },
+  { id: 112, nick: ME, scene: "s5", when: "3w", where: "Grand Teton National Park, WY" },
+];
+const PLACES = ["Rocky Mountain National Park, CO", "Estes Park, CO", "Fort Collins, CO", "Yellowstone National Park, WY", "Grand Teton National Park, WY",
+  "Glacier National Park, MT", "Great Smoky Mountains National Park, TN", "Katmai National Park, AK", "Denali National Park, AK", "Yosemite National Park, CA"];
+
+const S = {
+  route: "login", viewing: null, prev: "global",
+  loc: false, menu: false, modal: null,
+  follows: new Set(["grizzwald", "trail_mix_tina"]),
+  detectFail: false,
+  post: { stage: "empty", place: "" },
+  adminTab: "users",
+  bans: { troll_bear_99: "Uploaded photos of people instead of bears." },
+  banDraft: "",
+  avDraft: null,
+  fbw: { year: 2026, name: "Big Biscuit", num: "999", src: "external", postId: 102, scene: "s5",
+         credit: "Photo: A. Photographer, via explore.org", link: "https://explore.org/fat-bear-week", linkText: "Fat Bear Week on explore.org",
+         blurb: "Crowned the fattest bear of Fat Bear Week 2026." },
+};
+
+/* ---------------- small view helpers ---------------- */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const bearSvg = flip => ICON.bear.replace('class="bear"', `class="bear${flip ? " flip" : ""}"`);
+const photo = (scene, flip, extra = "") => `<div class="photo ${scene}">${extra}${bearSvg(flip)}</div>`;
+const winBadge = year => `<span class="winbadge">${ICON.trophy}<span>Fat Bear Week ${year}</span></span>`;
+const postById = id => POSTS.find(p => p.id === +id);
+function avatar(nick, cls = "") {
+  const u = USERS[nick];
+  return u && u.av ? `<div class="av photo ${u.av} ${cls}">${bearSvg(u.avFlip)}</div>` : `<div class="av ${cls}">${ICON.bearhead}</div>`;
+}
+const isMe = nick => nick === ME;
+const winsOf = nick => POSTS.filter(p => p.nick === nick && p.win).length;
+const followingOf = nick => isMe(nick) ? S.follows.size : USERS[nick].following;
+const followersOf = nick => USERS[nick].followers + (S.follows.has(nick) && !["grizzwald", "trail_mix_tina"].includes(nick) ? 1 : 0) - (!S.follows.has(nick) && ["grizzwald", "trail_mix_tina"].includes(nick) ? 1 : 0);
+
+function band(signedIn) {
+  const back = S.route === "user" ? `<button class="back mob" data-act="back" aria-label="Back">‹</button>` : "";
+  const me = signedIn ? `<button class="me desk ${S.menu ? "open" : ""}" data-act="menu">${avatar(ME)}${ME}<span class="caret">▼</span></button>` : "";
+  const menu = signedIn && S.menu ? `<div class="menu desk" style="flex-direction:column">
+      <button data-act="go" data-arg="me">${ICON.Profile}My profile</button>
+      ${USERS[ME].admin ? `<button data-act="go" data-arg="admin">${ICON.shield}Admin panel</button>` : ""}
+      <button data-act="tos">${ICON.doc}Terms of Service</button>
+      <hr><button class="danger" data-act="signout">${ICON.out}Sign out</button></div>` : "";
+  return `<header class="band">${back}<div class="mark"><img src="${CORNER}" alt=""></div><span class="t">Bear Watch</span>${me}${menu}</header>`;
+}
+
+const TABS = [["global", "Global"], ["following", "Following"], ["post", "Post"], ["me", "Profile"]];
+function shell(content, { rail = false, wide = false } = {}) {
+  const active = r => S.route === r;
+  return `<section class="screen">
+    ${band(true)}
+    <div class="layout scroll ${rail ? "withrail" : ""}">
+      <nav class="side desk">
+        ${TABS.map(([r, n]) => `<button class="plank ${active(r) ? "on" : ""} ${r === "post" ? "post-cta" : ""}" data-act="go" data-arg="${r}">${ICON[n]}${r === "post" ? "Post a bear" : n}</button>`).join("")}
+        <span class="link tos-link" data-act="tos">Terms of Service</span>
+      </nav>
+      <main class="main ${wide ? "wide" : ""}">${content}</main>
+      ${rail ? `<aside class="rail">${champCard()}${rulesCard()}<div class="foot">Bear Watch · Fort Collins, CO</div></aside>` : ""}
+    </div>
+    <nav class="tabs">${TABS.map(([r, n]) => `<button class="${active(r) ? "on" : ""}" data-act="go" data-arg="${r}">${ICON[n]}${n}</button>`).join("")}</nav>
+  </section>`;
+}
+
+function champCard(f = S.fbw) {
+  const fromPost = f.src === "post" && postById(f.postId);
+  const p = fromPost ? postById(f.postId) : null;
+  const pic = p ? photo(p.scene, p.flip) : photo(f.scene, false);
+  const credit = p
+    ? `Photo by <span class="link" data-act="user" data-arg="${p.nick}">${p.nick}</span> on Bear Watch`
+    : `${esc(f.credit)}${f.link ? ` · <span class="link" data-act="toast" data-arg="Opens ${esc(f.link)} in a new tab">${esc(f.linkText || "Link")} ↗</span>` : ""}`;
+  return `<div class="rcard panel champ">
+    <h3><span style="color:var(--gold);display:flex">${ICON.trophy}</span>Fat Bear Week ${esc(f.year)}</h3>
+    ${pic}
+    <div class="name">${esc(f.name)}${f.num ? ` <span style="font-weight:500;font-size:14px;opacity:.75">(Bear ${esc(f.num)})</span>` : ""}</div>
+    <div>${esc(f.blurb)}</div>
+    <div class="credit">${credit}</div>
+  </div>`;
+}
+const rulesCard = () => `<div class="rcard panel"><h3>${ICON.tree}Trail rules</h3><ol><li>Bears only.</li><li>No people in photos.</li><li>Keep nicknames and photos clean.</li></ol><p class="fine" style="margin-top:8px"><span class="link" data-act="tos">Full Terms of Service</span></p></div>`;
+function champMobile() {
+  const f = S.fbw, p = f.src === "post" && postById(f.postId);
+  return `<div class="champ-mob panel" data-act="modal" data-arg="champ">
+    ${p ? photo(p.scene, p.flip) : photo(f.scene)}
+    <div><div class="k">${ICON.trophy}Fat Bear Week ${esc(f.year)} champion</div><div class="name">${esc(f.name)}</div><div style="font-size:12px;opacity:.75">Tap to see the champ</div></div>
+  </div>`;
+}
+
+function postCard(p) {
+  return `<article class="post panel">
+    <div class="who" data-act="user" data-arg="${p.nick}">${avatar(p.nick)}<b>${p.nick}</b><time>${p.when}</time></div>
+    <div data-act="modal" data-arg="post:${p.id}">${photo(p.scene, p.flip, p.win ? winBadge(p.win) : "")}</div>
+    <div class="where">${ICON.pin}${p.where}</div>
+  </article>`;
+}
+
+/* ---------------- screens ---------------- */
+function loginView() {
+  return `<section class="screen"><div class="login">
+    <div class="login-hero"><img class="logo" src="${LOGO}" alt="Bear Watch"><div class="tag">Wild bear photography</div>${ICON.ridge}</div>
+    <div class="login-panel"><div class="inner">
+      <img class="logo mob" src="${LOGO}" alt="Bear Watch">
+      <h1 class="desk">Welcome, bear watcher</h1>
+      <p class="lede">Join the future of bear admiration based in Fort Collins, CO. Sign up or login using the following options:</p>
+      <button class="sso" data-act="go" data-arg="nickname"><span class="gbadge">${ICON.google}</span>Continue with Google</button>
+      <button class="sso dark" data-act="go" data-arg="global">${ICON.github}Continue with GitHub</button>
+      <p class="fine">By continuing you agree to our <span class="link" data-act="tos">Terms of Service</span>. We never see your password.</p>
+    </div></div>
+  </div></section>`;
+}
+
+function nicknameView() {
+  return `<section class="screen">${band(false)}<div class="cardwrap"><div class="card">
+    <h1>Pick a nickname</h1>
+    <p class="lede" style="margin:4px 0 26px">This is how other bear watchers will see you. You can't change it later, so choose wisely.</p>
+    <div class="field"><label>Nickname</label>
+      <div class="row"><input class="nick" maxlength="20" autocomplete="off" placeholder="e.g. otis_superfan" style="padding-right:54px"><span class="count">0/20</span></div>
+      <div class="msg"></div></div>
+    <button class="btn wide" data-act="go" data-arg="global" disabled id="nickgo">Start watching bears</button>
+    <p class="fine">3 to 20 characters: letters, numbers and underscores.<br>Try "otis_superfan" to see the taken state. By continuing you agree to the <span class="link" data-act="tos">Terms of Service</span>.</p>
+  </div></div></section>`;
+}
+
+function bannedView() {
+  const reason = S.bans[ME] || "Repeatedly uploading photos that aren't bears, in violation of the Terms of Service.";
+  return `<section class="screen">${band(false)}<div class="cardwrap"><div class="card">
+    ${ICON.closed}<h1>This trail is closed</h1>
+    <p class="lede" style="margin:4px 0 0">Your Bear Watch account has been banned.</p>
+    <div class="reason"><small>Reason</small>${esc(reason)}</div>
+    <button class="btn wide" data-act="signout">Sign out</button>
+    <p class="fine"><span class="link" data-act="tos">Terms of Service</span></p>
+  </div></div></section>`;
+}
+
+function feedView(kind) {
+  let body;
+  if (kind === "global") {
+    const posts = POSTS.filter(p => !S.bans[p.nick]);
+    body = `<div class="pagehead"><h2>Global</h2><span class="near">${ICON.pin}${S.loc ? "Within 500 mi of you" : "Location off"}</span></div>
+      ${champMobile()}
+      ${S.loc ? posts.map(postCard).join("") : `<div class="locask panel"><b>See bears near you</b><br>Allow location to see sightings within 500 miles. We use it for this search only and never save it.<button class="btn wide" style="margin-top:10px" data-act="allow">${ICON.locate.replace("<svg", '<svg class="ico"')}Use my location</button></div>`}`;
+  } else {
+    const posts = POSTS.filter(p => S.follows.has(p.nick) && !S.bans[p.nick]);
+    body = `<div class="pagehead"><h2>Following</h2><span class="near">${S.follows.size} bear watchers</span></div>
+      ${champMobile()}
+      ${posts.length ? posts.map(postCard).join("") : `<div class="empty panel">${ICON.tree.replace("<svg", '<svg width="44" height="44"')}<h3>Quiet on the trail</h3>You're not following anyone yet. Tap a nickname on the Global feed to visit their profile and follow them.<br><button class="btn" style="margin-top:14px" data-act="go" data-arg="global">Browse Global</button></div>`}`;
+  }
+  return shell(body, { rail: true });
+}
+
+function postView() {
+  const P = S.post;
+  let body = `<div class="pagehead"><h2>Post a bear</h2></div>`;
+  if (P.stage === "empty") {
+    body += `<div class="drop" data-act="pickphoto">${ICON.camera}<h3>Choose a bear photo</h3><p>JPG, PNG, WebP or HEIC, up to 12 MB.<br>We remove location and camera data before anything is saved.</p><span class="btn wood">Choose photo</span></div>
+      <p class="fine" style="text-align:center">One bear every minute. Bears only, no people. See the <span class="link" data-act="tos">Terms of Service</span>.</p>`;
+  } else if (P.stage === "ready") {
+    body += `<div class="preview panel">${photo("s5", true)}<div class="bar"><span class="okchip">${ICON.check}Location and camera data removed</span><span class="link" data-act="pickphoto">Change</span></div></div>
+      <div class="formpad">
+        <div class="field"><label>Where did you see this bear?</label>
+          <input class="place" autocomplete="off" placeholder="Search a park or town" value="${esc(P.place)}">
+          <div class="suggest" hidden></div>
+          <div class="hint">Shown under your photo as a place name. We round the spot to about 10 km to protect the bears.</div>
+        </div>
+        <button class="btn wide gold" data-act="submit" ${P.place ? "" : "disabled"}>Share bear</button>
+      </div>`;
+  } else if (P.stage === "checking") {
+    body += `<div class="checking panel"><div class="spin"></div><h3 style="margin:0 0 4px">Checking for bears…</h3><div style="font-size:13px;opacity:.8">This only takes a few seconds.</div>
+      <ul class="steps"><li class="done">✓ Photo received</li><li class="done">✓ Location and camera data removed</li><li class="now">● Looking for a bear</li><li>○ Posting to the trail</li></ul></div>`;
+  } else if (P.stage === "blurry") {
+    body += `<div class="oops panel">${photo("s4", false).replace('class="photo s4"', 'class="photo s4" style="width:120px;margin:0 auto;border-radius:8px;filter:blur(2px)"')}
+      <h3>Hmm, no bear found</h3><p>Oops! It seems your bear photo is a little bit blurry, try again with a clearer photo!</p>
+      <button class="btn wood" data-act="retry">Try another photo</button></div>`;
+  }
+  return shell(body);
+}
+
+function profileView(nick) {
+  const me = isMe(nick), u = USERS[nick];
+  const posts = POSTS.filter(p => p.nick === nick);
+  const wins = winsOf(nick);
+  const following = S.follows.has(nick);
+  const actions = me
+    ? `<button class="btn ghost" data-act="modal" data-arg="avatar">Change bear face</button>`
+    : `<button class="btn ${following ? "ghost" : ""}" data-act="follow" data-arg="${nick}">${following ? "Following ✓" : "Follow"}</button>`;
+  const body = `
+    <div class="phead">${avatar(nick, "xl")}
+      <div><h2>${nick}${u.admin ? `<span class="adminchip">Ranger</span>` : ""}</h2>
+        <div class="stats">
+          <div><b>${followersOf(nick)}</b><small>Followers</small></div>
+          <div><b>${followingOf(nick)}</b><small>Following</small></div>
+          <div><b><span style="color:var(--gold);display:flex">${ICON.trophy}</span>${wins}</b><small>Fat Bear Wins</small></div>
+        </div></div></div>
+    <div class="pactions">${actions}</div>
+    <div class="ptitle">${posts.length} bear${posts.length === 1 ? "" : "s"} spotted</div>
+    <div class="grid3">${posts.map(p => `<div data-act="modal" data-arg="post:${p.id}">${photo(p.scene, p.flip, p.win ? winBadge(p.win) : "")}</div>`).join("")}</div>
+    ${me ? `<div class="meonly mob">
+        ${u.admin ? `<button class="btn ghost" data-act="go" data-arg="admin">${ICON.shield}Admin panel</button>` : ""}
+        <button class="btn ghost danger" data-act="signout">${ICON.out}Sign out</button>
+        <p class="fine"><span class="link" data-act="tos">Terms of Service</span></p></div>` : ""}`;
+  return shell(body);
+}
+
+function adminView() {
+  let body = `<div class="pagehead"><h2>Ranger station</h2><span class="near">${ICON.shield.replace('class="ico"', 'width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"')}Admins only</span></div>
+    <div class="atabs"><button class="${S.adminTab === "users" ? "on" : ""}" data-act="atab" data-arg="users">Users</button><button class="${S.adminTab === "fbw" ? "on" : ""}" data-act="atab" data-arg="fbw">Fat Bear Week</button></div>`;
+  if (S.adminTab === "users") {
+    body += `<div class="field pad" style="margin-bottom:12px"><input class="usearch" placeholder="Search nicknames" autocomplete="off"></div>
+      <div class="ulist panel">${Object.keys(USERS).map(n => {
+        const banned = S.bans[n];
+        const count = POSTS.filter(p => p.nick === n).length;
+        return `<div class="urow" data-nick="${n}">${avatar(n)}
+          <div class="info"><b data-act="user" data-arg="${n}">${n}</b><span class="status ${banned ? "banned" : "active"}">${banned ? "Banned" : "Active"}</span>
+            <div class="meta">${count} post${count === 1 ? "" : "s"} · joined ${USERS[n].joined}${USERS[n].admin ? " · admin" : ""}</div>
+            ${banned ? `<div class="why">“${esc(banned)}”</div>` : ""}</div>
+          ${isMe(n) ? "" : banned ? `<button class="btn ghost sm" data-act="unban" data-arg="${n}">Unban</button>` : `<button class="btn ghost danger sm" data-act="modal" data-arg="ban:${n}">Ban</button>`}
+        </div>`;
+      }).join("")}</div>`;
+  } else {
+    const f = S.fbw;
+    const winners = POSTS.filter(p => p.win).sort((a, b) => b.win - a.win);
+    body += `<div class="fbw">
+      <div>
+        <div class="form panel">
+          <h3>Champion card</h3>
+          <div class="two">
+            <div class="field"><label>Year</label><input data-fbw="year" value="${esc(f.year)}" inputmode="numeric"></div>
+            <div class="field"><label>Bear number</label><input data-fbw="num" value="${esc(f.num)}" placeholder="optional"></div>
+          </div>
+          <div class="field"><label>Bear name</label><input data-fbw="name" value="${esc(f.name)}"></div>
+          <div class="field"><label>Blurb</label><input data-fbw="blurb" value="${esc(f.blurb)}"></div>
+          <label style="display:block;font-family:'Zilla Slab',serif;font-weight:600;color:var(--forest);margin-bottom:6px">Photo</label>
+          <div class="radios">
+            <label class="${f.src === "external" ? "on" : ""}" data-act="fbwsrc" data-arg="external"><input type="radio" ${f.src === "external" ? "checked" : ""}>Outside photo</label>
+            <label class="${f.src === "post" ? "on" : ""}" data-act="fbwsrc" data-arg="post"><input type="radio" ${f.src === "post" ? "checked" : ""}>A Bear Watch post</label>
+          </div>
+          ${f.src === "external" ? `
+            <div class="field"><div class="uploadrow">${photo(f.scene)}<button class="btn wood sm" data-act="fbwupload">Upload photo</button></div></div>
+            <div class="field"><label>Photo credit</label><input data-fbw="credit" value="${esc(f.credit)}"></div>
+            <div class="two">
+              <div class="field"><label>Link URL</label><input data-fbw="link" value="${esc(f.link)}"></div>
+              <div class="field"><label>Link text</label><input data-fbw="linkText" value="${esc(f.linkText)}"></div>
+            </div>` : `
+            <div class="field"><label>Post</label><select data-fbw="postId">${POSTS.map(p => `<option value="${p.id}" ${p.id === +f.postId ? "selected" : ""}>#${p.id} · ${p.nick} · ${p.where}</option>`).join("")}</select>
+              <div class="hint">Credit links to the poster's profile automatically.</div></div>`}
+          <button class="btn wide" data-act="toast" data-arg="Champion card saved">Save champion card</button>
+        </div>
+        <div class="ulist panel winlist" style="margin-top:16px">
+          <div class="urow" style="font-family:'Zilla Slab',serif;font-weight:700;color:var(--forest);font-size:17px">Fat Bear Wins awarded</div>
+          ${winners.map(p => `<div class="urow"><div data-act="modal" data-arg="post:${p.id}">${photo(p.scene, p.flip)}</div><div class="info"><b>${p.win}</b> · <span class="link" data-act="user" data-arg="${p.nick}">${p.nick}</span><div class="meta">#${p.id} · ${p.where}</div></div><button class="btn ghost danger sm" data-act="revoke" data-arg="${p.id}">Revoke</button></div>`).join("")}
+          <div class="urow meta" style="font-size:12px">To award a win, open any post and choose “Award Fat Bear Week win”.</div>
+        </div>
+      </div>
+      <div><p class="previewlabel">Live preview</p><div class="fbwprev">${champCard()}</div></div>
+    </div>`;
+  }
+  return shell(body, { wide: S.adminTab === "fbw" });
+}
+
+/* ---------------- modals ---------------- */
+function modalView() {
+  const m = S.modal;
+  if (!m) return "";
+  if (m === "tos") return `<div class="scrim" data-act="scrim"><div class="modal tos" style="height:82%">
+    <div class="mhead"><h3>Terms of Service</h3></div>
+    <div class="mbody">
+      <div class="draft">Draft for the mockup. The real text needs a proper review before launch.</div>
+      <h4>1. Bears only</h4><p>Bear Watch is for photos of bears. Every upload is checked automatically, and photos without a clear bear are turned away. Repeatedly posting photos that aren't bears can get your account banned.</p>
+      <h4>2. No people, nothing explicit</h4><p>Your photos must not include people, and must never include sexually explicit, violent or hateful content.</p>
+      <h4>3. Nicknames</h4><p>Nicknames must be 3 to 20 characters and must not contain slurs, profanity, or impersonate someone else (including Bear Watch staff). Nicknames can't be changed once chosen.</p>
+      <h4>4. Your photos</h4><p>You keep ownership of your photos. By posting, you let Bear Watch display them on the site. Only post photos you took yourself.</p>
+      <h4>5. Location and privacy</h4><p>We sign you in through Google or GitHub and only keep the account ID they give us, never your password or email. Your browser location is used for the Global feed search and is never saved. Photo locations are rounded to about 10 km and shown as a place name. We remove location and camera data from every photo.</p>
+      <h4>6. Respect the bears</h4><p>Keep a safe distance. Never approach, feed or disturb a bear for a photo. Follow park rules and ranger instructions.</p>
+      <h4>7. Bans</h4><p>Bear Watch admins can ban accounts that break these terms. Banned users will see the reason when they sign in.</p>
+      <h4>8. Changes</h4><p>We may update these terms. If the changes are significant we'll let you know on the site.</p>
+      <p style="opacity:.7;margin-top:14px">Last updated: November 2026</p>
+    </div>
+    <div class="mfoot"><button class="btn" data-act="close">Close</button></div>
+  </div></div>`;
+
+  if (m === "champ") return `<div class="scrim" data-act="scrim"><div class="modal sm">
+    <div class="mhead"><h3>Fat Bear Week</h3><button class="x" data-act="close">×</button></div>
+    <div class="mbody">${champCard().replace('class="rcard panel champ"', 'class="champ"').replace(/<h3>.*?<\/h3>/, "")}</div></div></div>`;
+
+  if (m.startsWith("post:")) {
+    const p = postById(m.slice(5));
+    if (!p) return "";
+    const mine = isMe(p.nick), admin = USERS[ME].admin;
+    return `<div class="scrim" data-act="scrim"><div class="modal postm sm">
+      <div class="mhead"><div class="who" data-act="user" data-arg="${p.nick}">${avatar(p.nick)}<b>${p.nick}</b></div><button class="x" data-act="close">×</button></div>
+      <div class="mbody">${photo(p.scene, p.flip, p.win ? winBadge(p.win) : "")}
+        <div class="where" style="border-top:0">${ICON.pin}${p.where}</div>
+        <div class="meta"><span style="opacity:.7">Posted ${p.when} ago</span>${p.win ? `<span class="winbadge">${ICON.trophy}Fat Bear Week ${p.win} winner</span>` : ""}</div>
+      </div>
+      ${mine || admin ? `<div class="mfoot">
+        ${admin ? (p.win ? `<button class="btn ghost sm" data-act="revoke" data-arg="${p.id}">Revoke ${p.win} win</button>` : `<button class="btn gold sm" data-act="award" data-arg="${p.id}">${ICON.trophy.replace("<svg", '<svg width="16" height="16"')}Award Fat Bear Week win</button>`) : ""}
+        ${mine ? `<button class="btn ghost danger sm" data-act="delete" data-arg="${p.id}">Delete post</button>` : ""}
+      </div>` : ""}
+    </div></div>`;
+  }
+
+  if (m.startsWith("ban:")) {
+    const n = m.slice(4);
+    return `<div class="scrim" data-act="scrim"><div class="modal sm">
+      <div class="mhead"><h3>Ban ${n}?</h3><button class="x" data-act="close">×</button></div>
+      <div class="mbody">
+        <p style="margin-top:0">They'll be signed out and see this reason every time they try to sign in. Their posts are hidden from feeds.</p>
+        <div class="chips">${["Photos that aren't bears", "Photos with people in them", "Inappropriate nickname", "Explicit content"].map(r => `<button data-act="banchip" data-arg="${r}">${r}</button>`).join("")}</div>
+        <div class="field" style="margin:0"><label>Reason (shown to the user)</label><textarea class="banreason" placeholder="Explain why this account is banned">${esc(S.banDraft)}</textarea></div>
+      </div>
+      <div class="mfoot"><button class="btn ghost sm" data-act="close">Cancel</button><button class="btn danger sm" id="banok" data-act="banok" data-arg="${n}" ${S.banDraft.trim() ? "" : "disabled"}>Ban user</button></div>
+    </div></div>`;
+  }
+
+  if (m === "avatar") {
+    const d = S.avDraft || { scene: USERS[ME].av, flip: USERS[ME].avFlip, zoom: 2.6 };
+    S.avDraft = d;
+    const mine = POSTS.filter(p => isMe(p.nick));
+    return `<div class="scrim" data-act="scrim"><div class="modal">
+      <div class="mhead"><h3>Choose your bear face</h3><button class="x" data-act="close">×</button></div>
+      <div class="mbody"><div class="avpick">
+        <div class="avprev">
+          <div class="ring">${d.scene ? `<div class="photo ${d.scene}">${bearSvg(d.flip).replace('class="bear', `style="transform:${d.flip ? "scaleX(-1) " : ""}scale(${d.zoom});transform-origin:84% 40%" class="bear`)}</div>` : ICON.bearhead}</div>
+          ${d.scene ? `<input type="range" class="zoom" min="1" max="4" step="0.1" value="${d.zoom}"><div style="font-size:12px;opacity:.7">Drag to zoom in on the face</div>` : `<div style="font-size:12px;opacity:.7">The classic blank bear</div>`}
+        </div>
+        <div>
+          <p style="margin:0 0 10px">Pick one of your photos. We'll start zoomed in on the bear's face.</p>
+          <div class="avgrid">
+            <div class="blank ${!d.scene ? "on" : ""}" data-act="avpick" data-arg="">${ICON.bearhead}</div>
+            ${mine.map(p => `<div class="${d.scene === p.scene && !!d.flip === !!p.flip ? "on" : ""}" data-act="avpick" data-arg="${p.id}">${photo(p.scene, p.flip)}</div>`).join("")}
+          </div>
+        </div>
+      </div></div>
+      <div class="mfoot"><button class="btn ghost sm" data-act="close">Cancel</button><button class="btn sm" data-act="avsave">Save bear face</button></div>
+    </div></div>`;
+  }
+  return "";
+}
+
+/* ---------------- render + events ---------------- */
+const root = document.querySelector(".app");
+const stage = document.querySelector(".stage");
+const device = document.querySelector(".device");
+
+function view() {
+  switch (S.route) {
+    case "login": return loginView();
+    case "nickname": return nicknameView();
+    case "banned": return bannedView();
+    case "global": return feedView("global");
+    case "following": return feedView("following");
+    case "post": return postView();
+    case "me": return profileView(ME);
+    case "user": return profileView(S.viewing);
+    case "admin": return adminView();
+  }
+}
+
+function render(keepScroll = true) {
+  const old = root.querySelector(".layout");
+  const top = keepScroll && old ? old.scrollTop : 0;
+  const mscroll = root.querySelector(".modal .mbody")?.scrollTop || 0;
+  root.innerHTML = view() + modalView() + `<div class="toast"></div>`;
+  const nu = root.querySelector(".layout");
+  if (nu) nu.scrollTop = top;
+  const mb = root.querySelector(".modal .mbody");
+  if (mb) mb.scrollTop = mscroll;
+  wireInputs();
+  syncControls();
+}
+
+function go(route, arg) {
+  if (route === "user" && isMe(arg)) route = "me";
+  if (!["user"].includes(S.route)) S.prev = S.route;
+  S.route = route; S.viewing = arg || null; S.menu = false; S.modal = null;
+  render(false);
+}
+
+function toast(text) {
+  const t = root.querySelector(".toast");
+  t.textContent = text; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 1700);
+}
+
+const BLOCKED = ["admin", "moderator", "bearwatch", "ranger"]; // stand-in for the real profanity list
+const TAKEN = Object.keys(USERS);
+
+function wireInputs() {
+  const nick = root.querySelector(".nick");
+  if (nick) nick.addEventListener("input", e => {
+    const v = e.target.value, msg = root.querySelector(".msg");
+    root.querySelector(".count").textContent = `${v.length}/20`;
+    let text = "", ok = false;
+    if (!v) text = "";
+    else if (!/^[A-Za-z0-9_]+$/.test(v)) text = "Letters, numbers and underscores only.";
+    else if (v.length < 3) text = "At least 3 characters.";
+    else if (BLOCKED.some(w => v.toLowerCase().includes(w))) text = "That nickname isn't allowed.";
+    else if (TAKEN.includes(v.toLowerCase())) text = "Taken. Another bear watcher got there first.";
+    else { text = "Available!"; ok = true; }
+    msg.textContent = text; msg.className = "msg " + (ok ? "ok" : "bad");
+    root.querySelector("#nickgo").disabled = !ok;
+  });
+
+  const place = root.querySelector(".place");
+  if (place) {
+    const box = root.querySelector(".suggest");
+    const show = () => {
+      const q = place.value.trim().toLowerCase();
+      const hits = PLACES.filter(p => p.toLowerCase().includes(q)).slice(0, 6);
+      box.innerHTML = `<button class="here" data-act="place" data-arg="Fort Collins, CO">${ICON.locate}Use where I am now</button>` +
+        hits.map(p => `<button data-act="place" data-arg="${p}">${ICON.pin}${p}</button>`).join("");
+      box.hidden = false;
+    };
+    place.addEventListener("focus", show);
+    place.addEventListener("input", () => { S.post.place = ""; root.querySelector('[data-act="submit"]').disabled = true; show(); });
+  }
+
+  const us = root.querySelector(".usearch");
+  if (us) us.addEventListener("input", () => {
+    const q = us.value.toLowerCase();
+    root.querySelectorAll(".urow[data-nick]").forEach(r => r.style.display = r.dataset.nick.includes(q) ? "" : "none");
+  });
+
+  root.querySelectorAll("[data-fbw]").forEach(inp => inp.addEventListener(inp.tagName === "SELECT" ? "change" : "input", () => {
+    S.fbw[inp.dataset.fbw] = inp.value;
+    root.querySelector(".fbwprev").innerHTML = champCard();
+  }));
+
+  const ban = root.querySelector(".banreason");
+  if (ban) ban.addEventListener("input", () => { S.banDraft = ban.value; root.querySelector("#banok").disabled = !ban.value.trim(); });
+
+  const zoom = root.querySelector(".zoom");
+  if (zoom) zoom.addEventListener("input", () => {
+    S.avDraft.zoom = +zoom.value;
+    root.querySelector(".ring .bear").style.transform = `${S.avDraft.flip ? "scaleX(-1) " : ""}scale(${zoom.value})`;
+  });
+}
+
+root.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]");
+  if (S.menu && !e.target.closest(".menu, .me")) { S.menu = false; if (!el) return render(); }
+  if (!el) {
+    const sug = root.querySelector(".suggest");
+    if (sug && !e.target.closest(".field")) sug.hidden = true;
+    return;
+  }
+  const act = el.dataset.act, arg = el.dataset.arg;
+  if (act === "scrim" && e.target !== el) return; // clicks inside the modal
+  switch (act) {
+    case "go": go(arg); break;
+    case "back": go(S.prev || "global"); break;
+    case "user": go("user", arg); break;
+    case "menu": S.menu = !S.menu; render(); break;
+    case "signout": S.menu = false; S.modal = null; go("login"); break;
+    case "tos": S.menu = false; S.modal = "tos"; render(); break;
+    case "modal": S.modal = arg; if (arg.startsWith("ban:")) S.banDraft = ""; if (arg === "avatar") S.avDraft = null; render(); break;
+    case "close": case "scrim": S.modal = null; render(); break;
+    case "toast": toast(arg); break;
+    case "allow": S.loc = true; render(); break;
+    case "follow":
+      S.follows.has(arg) ? S.follows.delete(arg) : S.follows.add(arg);
+      render(); toast(S.follows.has(arg) ? `Following ${arg}` : `Unfollowed ${arg}`); break;
+    case "pickphoto": S.post = { stage: "ready", place: "" }; render(); break;
+    case "place": S.post.place = arg; render(); break;
+    case "submit":
+      S.post.stage = "checking"; render();
+      setTimeout(() => {
+        if (S.route !== "post") return;
+        if (S.detectFail) { S.post.stage = "blurry"; render(); return; }
+        POSTS.unshift({ id: Date.now() % 100000, nick: ME, scene: "s5", flip: 1, when: "now", where: S.post.place });
+        S.post = { stage: "empty", place: "" }; S.loc = true; go("global"); toast("Your bear is on the trail!");
+      }, 1800);
+      break;
+    case "retry": S.post = { stage: "empty", place: "" }; render(); break;
+    case "atab": S.adminTab = arg; render(false); break;
+    case "banchip": S.banDraft = arg + "."; render(); break;
+    case "banok": S.bans[arg] = S.banDraft.trim(); S.modal = null; render(); toast(`${arg} has been banned`); break;
+    case "unban": delete S.bans[arg]; render(); toast(`${arg} has been unbanned`); break;
+    case "award": postById(arg).win = +S.fbw.year || 2026; render(); toast(`Fat Bear Week ${postById(arg).win} win awarded`); break;
+    case "revoke": delete postById(arg).win; render(); toast("Win revoked"); break;
+    case "delete": POSTS = POSTS.filter(p => p.id !== +arg); S.modal = null; render(); toast("Post deleted"); break;
+    case "fbwsrc": S.fbw.src = arg; render(); break;
+    case "fbwupload": S.fbw.scene = S.fbw.scene === "s5" ? "s2" : "s5"; render(); toast("Photo replaced"); break;
+    case "avpick": {
+      if (!arg) S.avDraft = { scene: null, zoom: 2.6 };
+      else { const p = postById(arg); S.avDraft = { scene: p.scene, flip: p.flip, zoom: 2.6 }; }
+      render(); break;
+    }
+    case "avsave": USERS[ME].av = S.avDraft.scene; USERS[ME].avFlip = S.avDraft.flip; S.modal = null; render(); toast("Bear face updated"); break;
+  }
+});
+
+/* ---------------- mockup controls ---------------- */
+function syncControls() {
+  const key = S.route === "user" ? `user:${S.viewing}` : S.route;
+  document.querySelectorAll('[data-g="route"] button').forEach(b => b.classList.toggle("on", b.dataset.jump === key));
+}
+function fit() {
+  const m = device.classList.contains("mobile") ? 18 : 0;
+  const w = device.offsetWidth + m, h = device.offsetHeight + m;
+  const s = Math.min(1, stage.clientWidth / w);
+  device.style.transform = `scale(${s})`;
+  device.style.left = `${Math.max(0, (stage.clientWidth - w * s) / 2)}px`;
+  stage.style.height = `${h * s}px`;
+}
+new ResizeObserver(fit).observe(stage);
+document.getElementById("controls").addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.dataset.jump) { const [r, a] = b.dataset.jump.split(":"); S.loc = S.loc || r === "global"; go(r, a); }
+  if (b.dataset.device) { device.className = `device ${b.dataset.device}`; fit(); }
+  if (b.dataset.detector) S.detectFail = b.dataset.detector === "fail";
+  if (!b.dataset.jump) b.parentElement.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+});
+render();
+</script>
+</body>
+</html>
