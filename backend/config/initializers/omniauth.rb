@@ -15,4 +15,9 @@ end
 # (omniauth-rails_csrf_protection checks it).
 OmniAuth.config.allowed_request_methods = %i[post]
 OmniAuth.config.logger = Rails.logger
+
+# In production, build callback URLs from the configured hostname rather than
+# the request's Host header, which a client controls. In development the
+# request host (localhost:5173 via the Vite proxy) is what we want.
+OmniAuth.config.full_host = "https://#{ENV.fetch("APP_HOST", "localhost")}" if Rails.env.production?
 OmniAuth.config.on_failure = proc { |env| OmniAuth::FailureEndpoint.new(env).redirect_to_failure }
