@@ -30,7 +30,10 @@ This doc records decisions as we make them, open questions, and build phases.
 | D16 | Terms of Service | Opens as a modal with a scrolling body and a Close button bottom-right. Linked from login, nickname, sidebar, rail, menu, profile and banned screens. |
 | D17 | Nickname filter | Format/length checks plus a blocklist: LDNOOBW English list (CC BY 4.0) with leetspeak normalisation, an allowlist for innocent words ("grape", "button"), and reserved names (`*admin`, `*bearwatch`, `*moderator` anywhere; `ranger`, `staff`, etc. only as the whole name). Lists live in `backend/config/nickname_filter/`. |
 | D18 | Sign-up window | After SSO for a new account, the person has 30 minutes to pick a nickname before starting over. |
-| D11 | Bear check | `earthtoolsmaker/bear-conservation` **detect step only**, 85% confidence threshold. |
+| D11 | Bear check | ~~bear-conservation detect step~~ → **Option B**: a permissively licensed COCO detector (e.g. YOLOX, Apache-2.0) run with `onnxruntime` (MIT), using COCO's built-in `bear` class at 85% confidence. Avoids Ultralytics' AGPL terms (bear-conservation is MIT but its model is trained with and runs on Ultralytics). Validate against real photos before committing to it. |
+| D19 | Photo storage | **Cloudflare R2** in production (free tier, no egress fees); local disk in development. Storage is swappable via `STORAGE_BACKEND`. The no-internet worker writes to a shared volume; the web container uploads to R2. Setup steps: `docs/r2-setup.md`. |
+| D20 | Repo visibility | **Private.** Still: keep secrets in `.env` only, run a secret scan before any change of mind. |
+| D21 | Real SSO | Google + GitHub verified end to end on 2026-11-12 (sign-up, linking, returning sign-in). Production pins the callback host and allowed Host to `APP_HOST`. |
 
 ## Architecture (current draft)
 
@@ -68,9 +71,8 @@ browser ──> Caddy (TLS, serves SPA + /media) ──> Rails API (web)  ──
 - **Q8 Awarding wins:** The mockup awards a win from the post's pop-up (admins only) and lists/revokes them in the admin panel. OK?
 - **Q2 Sightings map (later):** Fine with 10 km rounding as a heatmap/clusters. Avoid exact pins (risk to the bears and to user privacy).
 - **Q3 Place names:** Free-text place name, or pick from a list / geocoder (e.g. OSM Nominatim, free but rate limited)?
-- **Q4 Detector coverage:** Verify that the detect model handles full-body and far-away shots, not just faces. Also check the Ultralytics AGPL license implications.
+- **Q4 Detector accuracy:** Test the COCO detector on real bear photos (close-ups, far away, cubs, water, night) and non-bear photos (dogs, people, teddy bears) before wiring it in.
 - **Q5 Ban appeals:** Should the banned screen include a contact method?
-- **Q6 Blob storage:** Local disk first; Cloudflare R2 (10 GB free, no egress fees) as the cloud option?
 - **Q7 Rate limit:** 1 upload/min/user plus a daily cap?
 
 ## Notes
