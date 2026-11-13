@@ -42,6 +42,8 @@ class Result:
     runner_up: str
     runner_up_score: float
     ms: int
+    # Best bear box as (centre x, centre y, width, height), 0-1 of the photo.
+    bear_box: tuple | None = None
 
     def as_dict(self):
         return {
@@ -52,6 +54,7 @@ class Result:
             "runner_up": self.runner_up,
             "runner_up_score": round(self.runner_up_score, 4),
             "ms": self.ms,
+            "bear_box": [round(v, 4) for v in self.bear_box] if self.bear_box else None,
         }
 
 
@@ -69,7 +72,7 @@ class BearDetector:
 
     def detect(self, image_bytes: bytes) -> Result:
         started = time.perf_counter()
-        tensor = self._preprocess(image_bytes)
+        tensor, content_size = self._preprocess(image_bytes)
         raw = self.session.run(None, {self.input_name: tensor})[0][0]
         scores = self._class_scores(raw)
 
@@ -85,16 +88,31 @@ class BearDetector:
             runner_up=COCO[runner_up],
             runner_up_score=runner_up_score,
             ms=round((time.perf_counter() - started) * 1000),
+            bear_box=self._best_box(raw, BEAR, content_size),
         )
 
-    def _preprocess(self, image_bytes: bytes) -> np.ndarray:
+    def _preprocess(self, image_bytes: bytes):
+        """Letterboxed tensor, plus the (width, height) the photo fills inside it."""
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         ratio = min(self.size / image.width, self.size / image.height)
         resized = image.resize((max(1, int(image.width * ratio)), max(1, int(image.height * ratio))), Image.BILINEAR)
         canvas = np.full((self.size, self.size, 3), 114, dtype=np.uint8)
         canvas[: resized.height, : resized.width] = np.asarray(resized)
         bgr = canvas[:, :, ::-1]  # YOLOX was trained on OpenCV (BGR) images
-        return np.ascontiguousarray(bgr.transpose(2, 0, 1)[None].astype(np.float32))
+        tensor = np.ascontiguousarray(bgr.transpose(2, 0, 1)[None].astype(np.float32))
+        return tensor, (resized.width, resized.height)
+
+    def _best_box(self, raw: np.ndarray, cls: int, content_size):
+        """Highest-scoring box for a class, as fractions of the photo."""
+        i = int(np.argmax(raw[:, 4] * raw[:, 5 + cls]))
+        stride = float(self.strides[i, 0])
+        cx = (raw[i, 0] + self.grids[i, 0]) * stride
+        cy = (raw[i, 1] + self.grids[i, 1]) * stride
+        w = float(np.exp(raw[i, 2])) * stride
+        h = float(np.exp(raw[i, 3])) * stride
+        width, height = content_size
+        clamp = lambda v: float(min(1.0, max(0.0, v)))  # noqa: E731
+        return (clamp(cx / width), clamp(cy / height), clamp(w / width), clamp(h / height))
 
     def _class_scores(self, raw: np.ndarray) -> np.ndarray:
         """Best score per class across all candidate boxes (objectness x class probability)."""

@@ -1,4 +1,22 @@
+import type { AvatarCrop } from './session'
+
 export type PostStatus = 'processing' | 'published' | 'rejected' | 'failed'
+
+// How bear watchers see each other.
+export interface PublicUser {
+  nickname: string
+  avatar: AvatarCrop | null
+  ranger: boolean
+}
+
+export interface Profile extends PublicUser {
+  followers_count: number
+  following_count: number
+  fat_bear_wins: number
+  posts_count: number
+  me: boolean
+  following: boolean
+}
 
 export interface Post {
   id: number
@@ -9,7 +27,14 @@ export interface Post {
   place_name: string
   failure_reason: string | null
   created_at: string
-  user: { nickname: string }
+  user: PublicUser
+  // Where the detector found the bear: centre x, centre y, width, height (0-1).
+  bear_box: [number, number, number, number] | null
+}
+
+export interface PostPage {
+  posts: Post[]
+  next_before: number | null
 }
 
 export interface Place {
@@ -29,4 +54,8 @@ export function timeAgo(iso: string, now = Date.now()): string {
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`
   if (seconds < 7 * 86400) return `${Math.floor(seconds / 86400)}d`
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+}
+
+export function profilePath(user: Pick<PublicUser, 'nickname'>, myNickname?: string) {
+  return user.nickname === myNickname ? '/profile' : `/u/${encodeURIComponent(user.nickname)}`
 }

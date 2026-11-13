@@ -10,7 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_13_000001) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_13_000002) do
+  create_table "follows", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "follower_id", null: false
+    t.bigint "followee_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["followee_id"], name: "index_follows_on_followee_id"
+    t.index ["follower_id", "followee_id"], name: "index_follows_on_follower_id_and_followee_id", unique: true
+    t.index ["follower_id"], name: "index_follows_on_follower_id"
+  end
+
   create_table "identities", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "provider", limit: 32, null: false
@@ -37,8 +47,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_000001) do
     t.datetime "updated_at", null: false
     t.string "storage", limit: 8, default: "local", null: false
     t.integer "image_bytes"
+    t.float "bear_x"
+    t.float "bear_y"
+    t.float "bear_w"
+    t.float "bear_h"
     t.index ["image_key"], name: "index_posts_on_image_key", unique: true
     t.index ["status", "created_at"], name: "index_posts_on_status_and_created_at"
+    t.index ["status", "latitude", "longitude"], name: "index_posts_on_status_and_latitude_and_longitude"
     t.index ["user_id", "created_at"], name: "index_posts_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_posts_on_user_id"
   end
@@ -212,9 +227,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_000001) do
     t.string "ban_reason", limit: 500
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "avatar_post_id"
+    t.float "avatar_zoom"
+    t.float "avatar_x"
+    t.float "avatar_y"
+    t.index ["avatar_post_id"], name: "index_users_on_avatar_post_id"
     t.index ["nickname"], name: "index_users_on_nickname", unique: true
   end
 
+  add_foreign_key "follows", "users", column: "followee_id"
+  add_foreign_key "follows", "users", column: "follower_id"
   add_foreign_key "identities", "users"
   add_foreign_key "posts", "users"
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
@@ -225,4 +247,5 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_000001) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "users", "posts", column: "avatar_post_id", on_delete: :nullify
 end

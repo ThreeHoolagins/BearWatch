@@ -5,6 +5,7 @@ This doc records decisions as we make them, open questions, and build phases.
 
 ## Status
 - **Phase 0 (done):** repo, Docker skeleton, design mockups.
+- **Phase 3 (done, branch `phase-2-uploads`):** Global feed (published bears within 500 miles, `ST_Distance_Sphere` with a bounding-box prefilter), Following feed, cursor pagination with infinite scroll, profiles for any user (`/u/:nickname`), follow/unfollow, bear-face avatars (crop + zoom + drag, starting on the detector's bear box).
 - **Phase 2 (done, branch `phase-2-uploads`):** photo uploads end to end: magic-byte checks, libvips re-encode to stripped WebP in a no-internet worker, YOLOX-S bear check, place search (Nominatim), rate limits, profile grid. Verified in dev and in the production stack.
 - **Phase 1 (done, branch `phase-1-auth`):** Rails 8 API + React SPA; SSO sign-in (Google, GitHub, dev-only developer login), nickname sign-up with live checks and a blocklist, account linking, ban screen, Terms modal, signpost/tab shell. Feeds, posting and admin screens are placeholders until their phases.
 - Mockup: `docs/design/mockups.html`, a full clickable site in direction B (desktop + mobile).
@@ -69,9 +70,11 @@ browser ──> Caddy (TLS, serves SPA + /media) ──> Rails API (web)  ──
 - `identities` *(built)*: id, user_id, provider (`google_oauth2`/`github`/`developer`), uid; unique(provider, uid) and unique(user_id, provider)
 - `posts` *(built)*: id, user_id, status (`processing`/`published`/`rejected`/`failed`), image_key, width, height, place_name, latitude/longitude (decimal(4,1), ~11 km), bear_score, failure_reason, timestamps
 - `solid_queue_*` *(built)*: background job tables, in the main database
+- `follows` *(built)*: follower_id, followee_id; unique pair
+- `users` avatar *(built)*: avatar_post_id (own published post), avatar_zoom (1-4), avatar_x/avatar_y (0-1 centre point)
+- `posts.bear_x/y/w/h` *(built)*: where the detector found the bear
 - `fat_bear_wins`: id, post_id, year, awarded_by (user_id)
 - `fat_bear_champions`: id, year (unique), bear_name, bear_number, blurb, post_id (nullable), image_key (nullable, for outside photos), credit, link_url, link_text
-- `follows`: id, follower_id, followee_id; unique pair
 
 ## Open questions
 - **Q1 Own-post deletion:** The mockup lets users delete their own posts (not in the original plan). Keep?
@@ -90,6 +93,6 @@ browser ──> Caddy (TLS, serves SPA + /media) ──> Rails API (web)  ──
 0. Repo, Docker skeleton, mockups, plan *(done)*
 1. Scaffold Rails API + React (Vite) SPA; SSO login, nickname, ban screen *(done)*
 2. Upload pipeline: worker + libvips + detector *(done)*
-3. Feeds (Global/Following), profiles, follow
+3. Feeds (Global/Following), profiles, follow *(done)*
 4. Admin panel (bans, Fat Bear wins)
 5. Deploy (AWS/GCP cheap tier), TOS page

@@ -35,6 +35,7 @@ class PhotoProcessor
 
     verdict = @detector.detect(File.binread(output))
     @post.bear_score = verdict.bear_score
+    @post.bear_x, @post.bear_y, @post.bear_w, @post.bear_h = verdict.bear_box if verdict.bear_box&.size == 4
 
     if verdict.person_detected
       finish(:rejected, "person")

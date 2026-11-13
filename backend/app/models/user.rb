@@ -1,6 +1,14 @@
 class User < ApplicationRecord
   has_many :identities, dependent: :destroy
   has_many :posts, dependent: :destroy
+  belongs_to :avatar_post, class_name: "Post", optional: true
+
+  has_many :following_links, class_name: "Follow", foreign_key: :follower_id, dependent: :delete_all, inverse_of: :follower
+  has_many :follower_links, class_name: "Follow", foreign_key: :followee_id, dependent: :delete_all, inverse_of: :followee
+  has_many :followees, through: :following_links
+  has_many :followers, through: :follower_links
+
+  scope :active, -> { where(banned_at: nil) }
 
   normalizes :nickname, with: ->(nickname) { nickname.strip }
 
@@ -24,7 +32,20 @@ class User < ApplicationRecord
   end
 
   def as_json(*)
-    { id:, nickname:, is_admin:, banned: banned?, ban_reason: banned? ? ban_reason : nil }
+    { id:, nickname:, is_admin:, banned: banned?, ban_reason: banned? ? ban_reason : nil, avatar: }
+  end
+
+  # The crop of one of their photos shown in the circle, or nil for the blank bear.
+  def avatar
+    post = avatar_post
+    return unless post&.published? && post.user_id == id
+
+    { url: post.image_url, width: post.width, height: post.height, zoom: avatar_zoom || 1.0, x: avatar_x || 0.5, y: avatar_y || 0.5 }
+  end
+
+  # How bear watchers see each other (no ban details, no admin flag).
+  def public_json
+    { nickname:, avatar:, ranger: is_admin }
   end
 
   private

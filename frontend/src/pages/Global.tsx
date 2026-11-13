@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Feed } from '../components/Feed'
 import { LocateIcon, PinIcon } from '../components/icons'
 import { Shell } from '../components/Shell'
 
 type Location = { state: 'off' } | { state: 'asking' } | { state: 'on'; lat: number; lng: number } | { state: 'denied' } | { state: 'unavailable' }
 
 // The browser location is kept in memory for this page only and never saved.
-// Phase 3 sends it with the feed request to find bears within 500 miles.
+// It's rounded to ~11 km before being sent with the feed request.
 export function Global() {
   const [location, setLocation] = useState<Location>({ state: 'off' })
 
@@ -38,10 +40,17 @@ export function Global() {
       </div>
 
       {location.state === 'on' ? (
-        <div className="empty panel">
-          <h3>No bears on the trail yet</h3>
-          Photo uploads open in the next update. Once they do, sightings within 500 miles of you will show up here.
-        </div>
+        <Feed
+          url={`/api/feed/global?lat=${location.lat.toFixed(1)}&lng=${location.lng.toFixed(1)}`}
+          empty={
+            <div className="empty panel">
+              <h3>No bears near you yet</h3>
+              Nobody has spotted a bear within 500 miles of you. Be the first!
+              <br />
+              <Link className="btn gold" to="/post">Post a bear</Link>
+            </div>
+          }
+        />
       ) : (
         <div className="locask panel">
           <b>See bears near you</b>

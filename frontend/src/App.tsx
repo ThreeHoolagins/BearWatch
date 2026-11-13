@@ -7,7 +7,7 @@ import { Global } from './pages/Global'
 import { Login } from './pages/Login'
 import { Nickname } from './pages/Nickname'
 import { Post } from './pages/Post'
-import { Profile } from './pages/Profile'
+import { MyProfile, UserProfile } from './pages/Profile'
 import { useSession, type User } from './session'
 
 export default function App() {
@@ -44,7 +44,8 @@ function SignedIn({ user }: { user: User }) {
       <Route path="/" element={<Global />} />
       <Route path="/following" element={<Following />} />
       <Route path="/post" element={<Post />} />
-      <Route path="/profile" element={<Profile user={user} />} />
+      <Route path="/profile" element={<MyProfile />} />
+      <Route path="/u/:nickname" element={<UserProfile />} />
       <Route path="/admin" element={user.is_admin ? <Admin /> : <Navigate to="/" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -8,7 +8,7 @@ import { DocIcon, ProfileIcon, ShieldIcon, SignOutIcon } from './icons'
 
 // The forest-green header. Signed in on desktop it carries the account
 // dropdown (profile, admin, terms, sign out).
-export function Band({ signedIn = false }: { signedIn?: boolean }) {
+export function Band({ signedIn = false, back = false }: { signedIn?: boolean; back?: boolean }) {
   const { session, signOut } = useSession()
   const openTerms = useOpenTerms()
   const navigate = useNavigate()
@@ -37,6 +37,11 @@ export function Band({ signedIn = false }: { signedIn?: boolean }) {
 
   return (
     <header className="band">
+      {back && (
+        <button className="back mob" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))} aria-label="Back">
+          ‹
+        </button>
+      )}
       <div className="mark">
         <img src={cornerLogo} alt="" />
       </div>
@@ -44,7 +49,7 @@ export function Band({ signedIn = false }: { signedIn?: boolean }) {
       {signedIn && user && (
         <div className="account desk" ref={menuRef}>
           <button className={`me ${menuOpen ? 'open' : ''}`} onClick={() => setMenuOpen((open) => !open)} aria-haspopup="menu" aria-expanded={menuOpen}>
-            <Avatar />
+            <Avatar avatar={user.avatar} />
             {user.nickname}
             <span className="caret" aria-hidden>▼</span>
           </button>

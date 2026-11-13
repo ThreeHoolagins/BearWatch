@@ -13,12 +13,12 @@ const TABS = [
 
 // Signed-in layout: signpost nav on desktop, bottom tabs on mobile, and an
 // optional right column on wide screens.
-export function Shell({ children, rail = false, wide = false }: { children: ReactNode; rail?: boolean; wide?: boolean }) {
+export function Shell({ children, rail = false, wide = false, back = false }: { children: ReactNode; rail?: boolean; wide?: boolean; back?: boolean }) {
   const openTerms = useOpenTerms()
 
   return (
     <>
-      <Band signedIn />
+      <Band signedIn back={back} />
       <div className={`layout ${rail ? 'withrail' : ''}`}>
         <nav className="side desk" aria-label="Main">
           {TABS.map(({ to, sign, Icon }) => (

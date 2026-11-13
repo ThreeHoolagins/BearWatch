@@ -74,7 +74,7 @@ class FakeDetector
 
   def initialize(is_bear: true, bear_score: 0.95, person_score: 0.0, error: nil)
     @verdict = BearDetectorClient::Verdict.new(is_bear:, bear_score:, person_detected: person_score >= 0.2, person_score:,
-                                               runner_up: "dog", runner_up_score: 0.1)
+                                               runner_up: "dog", runner_up_score: 0.1, bear_box: [ 0.5, 0.4, 0.6, 0.5 ])
     @error = error
     @calls = 0
   end
