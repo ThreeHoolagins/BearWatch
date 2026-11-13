@@ -1,0 +1,102 @@
+"""Bear detection with a COCO-trained YOLOX model (Apache-2.0) on onnxruntime.
+
+COCO already has a "bear" class, so no custom training is needed. A photo
+counts as a bear when the bear score clears the threshold AND beats every
+other animal, so a very bear-like dog that scores "86% dog, 85% bear" fails.
+"""
+import io
+import time
+from dataclasses import dataclass
+
+import numpy as np
+import onnxruntime as ort
+from PIL import Image
+
+COCO = ["person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light",
+        "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
+        "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee",
+        "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard",
+        "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple",
+        "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch",
+        "potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard",
+        "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
+        "scissors", "teddy bear", "hair drier", "toothbrush"]
+
+BEAR = COCO.index("bear")
+PERSON = COCO.index("person")
+# Things a bear photo could be confused with. The bear must outscore all of them.
+LOOKALIKES = [COCO.index(name) for name in
+              ("bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "zebra", "giraffe", "teddy bear")]
+
+
+@dataclass
+class Result:
+    is_bear: bool
+    bear_score: float
+    person_score: float
+    runner_up: str
+    runner_up_score: float
+    ms: int
+
+    def as_dict(self):
+        return {
+            "is_bear": self.is_bear,
+            "bear_score": round(self.bear_score, 4),
+            "person_score": round(self.person_score, 4),
+            "runner_up": self.runner_up,
+            "runner_up_score": round(self.runner_up_score, 4),
+            "ms": self.ms,
+        }
+
+
+class BearDetector:
+    def __init__(self, model_path: str, threshold: float):
+        options = ort.SessionOptions()
+        # Keep CPU use modest so a Raspberry Pi stays responsive.
+        options.intra_op_num_threads = 2
+        self.session = ort.InferenceSession(model_path, options, providers=["CPUExecutionProvider"])
+        self.input_name = self.session.get_inputs()[0].name
+        self.size = self.session.get_inputs()[0].shape[2]
+        self.threshold = threshold
+        self.grids, self.strides = self._grids(self.size)
+
+    def detect(self, image_bytes: bytes) -> Result:
+        started = time.perf_counter()
+        tensor = self._preprocess(image_bytes)
+        raw = self.session.run(None, {self.input_name: tensor})[0][0]
+        scores = self._class_scores(raw)
+
+        bear = float(scores[BEAR])
+        runner_up = max(LOOKALIKES, key=lambda i: scores[i])
+        runner_up_score = float(scores[runner_up])
+        return Result(
+            is_bear=bear >= self.threshold and bear > runner_up_score,
+            bear_score=bear,
+            person_score=float(scores[PERSON]),
+            runner_up=COCO[runner_up],
+            runner_up_score=runner_up_score,
+            ms=round((time.perf_counter() - started) * 1000),
+        )
+
+    def _preprocess(self, image_bytes: bytes) -> np.ndarray:
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        ratio = min(self.size / image.width, self.size / image.height)
+        resized = image.resize((max(1, int(image.width * ratio)), max(1, int(image.height * ratio))), Image.BILINEAR)
+        canvas = np.full((self.size, self.size, 3), 114, dtype=np.uint8)
+        canvas[: resized.height, : resized.width] = np.asarray(resized)
+        bgr = canvas[:, :, ::-1]  # YOLOX was trained on OpenCV (BGR) images
+        return np.ascontiguousarray(bgr.transpose(2, 0, 1)[None].astype(np.float32))
+
+    def _class_scores(self, raw: np.ndarray) -> np.ndarray:
+        """Best score per class across all candidate boxes (objectness x class probability)."""
+        return (raw[:, 4:5] * raw[:, 5:]).max(axis=0)
+
+    @staticmethod
+    def _grids(size: int):
+        grids, strides = [], []
+        for stride in (8, 16, 32):
+            n = size // stride
+            ys, xs = np.meshgrid(np.arange(n), np.arange(n), indexing="ij")
+            grids.append(np.stack((xs, ys), 2).reshape(-1, 2))
+            strides.append(np.full((n * n, 1), stride))
+        return np.concatenate(grids), np.concatenate(strides)

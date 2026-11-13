@@ -6,9 +6,11 @@
 FROM ruby:3.3-slim AS base
 WORKDIR /rails
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libvips42 && \
+    apt-get install --no-install-recommends -y curl libvips-tools && \
     rm -rf /var/lib/apt/lists/*
-ENV BUNDLE_PATH=/usr/local/bundle
+# VIPS_BLOCK_UNTRUSTED refuses libvips loaders that aren't hardened for
+# untrusted input; VIPS_CONCURRENCY keeps libvips from using every core.
+ENV BUNDLE_PATH=/usr/local/bundle VIPS_BLOCK_UNTRUSTED=1 VIPS_CONCURRENCY=2
 
 FROM base AS buildtools
 RUN apt-get update -qq && \
@@ -35,7 +37,7 @@ ENV RAILS_ENV=production BUNDLE_DEPLOYMENT=1 BUNDLE_WITHOUT="development:test"
 COPY --from=build /usr/local/bundle /usr/local/bundle
 COPY --from=build /rails /rails
 RUN useradd --create-home --shell /bin/bash rails && \
-    mkdir -p storage tmp log && chown -R rails:rails storage tmp log db
+    mkdir -p storage/uploads storage/media tmp log && chown -R rails:rails storage tmp log db
 USER rails
 EXPOSE 3000
 CMD ["bash", "-c", "bin/rails db:prepare && bin/rails server -b 0.0.0.0"]

@@ -12,10 +12,10 @@ Requires Docker Desktop.
 
 ```sh
 cp .env.example .env        # first time only
-docker compose up           # MySQL, Rails (:3000) and Vite (:5173)
+docker compose up           # MySQL, Rails (:3000), Vite (:5173), photo worker, bear detector
 ```
 
-Open **http://localhost:5173**. Vite proxies `/api` and `/auth` to Rails, so the browser only ever talks to one origin.
+Open **http://localhost:5173**. Vite proxies `/api`, `/auth` and `/media` to Rails, so the browser only ever talks to one origin.
 
 Without Google/GitHub credentials you'll see a **Developer sign-in** button (development only). It asks for a name, which becomes a fake account ID, then sends you to the nickname screen like a real new account would.
 
@@ -24,6 +24,18 @@ Without Google/GitHub credentials you'll see a **Developer sign-in** button (dev
 Fill in the `GOOGLE_*` / `GITHUB_*` values in `.env` (see the comments there for where to create the OAuth apps and which redirect URLs to register), then `docker compose restart web`.
 
 We only ever ask for the minimum scope (`openid` for Google, no scopes for GitHub) and only store the provider's account ID.
+
+### Photos
+
+Uploads are re-encoded by the `worker` container and checked by the `detector` container; both sit on a network with no internet access. In development, published photos land in `backend/public/media/` (gitignored).
+
+To tune the bear threshold, put labelled photos in `bears/` and `not_bears/` folders and run:
+
+```sh
+docker compose run --rm -v /path/to/photos:/photos:ro detector python tests/evaluate.py /photos
+```
+
+Then set `BEAR_CONFIDENCE_THRESHOLD` in `.env`.
 
 ### Admin chores
 

@@ -48,6 +48,10 @@ module Bearwatch
     config.middleware.use ActionDispatch::Cookies
     config.middleware.use config.session_store, config.session_options
 
+    # Background jobs (photo processing) run in the worker container via Solid
+    # Queue, using the main database.
+    config.active_job.queue_adapter = :solid_queue
+
     # Rate limiting (ActionController::RateLimiting) needs a real cache store.
     config.cache_store = :memory_store
   end

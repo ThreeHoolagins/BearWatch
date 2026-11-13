@@ -5,6 +5,7 @@ This doc records decisions as we make them, open questions, and build phases.
 
 ## Status
 - **Phase 0 (done):** repo, Docker skeleton, design mockups.
+- **Phase 2 (done, branch `phase-2-uploads`):** photo uploads end to end: magic-byte checks, libvips re-encode to stripped WebP in a no-internet worker, YOLOX-S bear check, place search (Nominatim), rate limits, profile grid. Verified in dev and in the production stack.
 - **Phase 1 (done, branch `phase-1-auth`):** Rails 8 API + React SPA; SSO sign-in (Google, GitHub, dev-only developer login), nickname sign-up with live checks and a blocklist, account linking, ban screen, Terms modal, signpost/tab shell. Feeds, posting and admin screens are placeholders until their phases.
 - Mockup: `docs/design/mockups.html`, a full clickable site in direction B (desktop + mobile).
   Serve the repo root (`python -m http.server 8787`) and open `/docs/design/mockups.html`.
@@ -51,17 +52,20 @@ browser ──> Caddy (TLS, serves SPA + /media) ──> Rails API (web)  ──
 - **Jobs:** Solid Queue (DB-backed), so there's no Redis to run on a small box.
 - **No-internet network:** the worker and detector only sit on a Docker
   `internal: true` network.
-- **Upload pipeline:** check extension + magic bytes, then read the header
-  dimensions and reject over the pixel limit, then libvips re-encodes to WebP
-  (≤2048 px wide, strip metadata, with a timeout), then the detector runs on
-  the *re-encoded* image only, then the original is deleted and the post is
-  published (or rejected with the "blurry photo" message).
+- **Upload pipeline (built):**
+  1. *Web:* size ≤ 12 MB (Caddy caps the body at 13 MB), extension in jpg/jpeg/png/webp/heic/heif, and the file's magic bytes must match the extension. Rate limits checked. Original saved to the `uploads` volume, post created as `processing`, job queued.
+  2. *Worker (Solid Queue, no internet, `VIPS_BLOCK_UNTRUSTED=1`):* `vipsheader` reads only the header; over 50 MP is rejected before any decoding. `vipsthumbnail` (30 s hard timeout) auto-rotates, converts to sRGB, fits within 2048×2048 and writes WebP Q82 with all metadata stripped.
+  3. *Detector:* receives only the re-encoded WebP. YOLOX-S; bear ≥ 0.85 **and** higher than every lookalike animal (dog, cow, horse, teddy bear…).
+  4. Published → WebP moved to `media` under a random 32-char name; otherwise rejected/failed. The original is always deleted (kept only while the detector is temporarily down, for retries: 12 tries over ~2 min).
+- **Rate limits:** 1 accepted photo per minute and 20 per day per user (rejected photos don't count), plus 5 upload attempts per minute.
+- **Place search:** OpenStreetMap Nominatim via our server (1 req/s throttle, 1-day cache, explicit Search button: Nominatim forbids search-as-you-type). Photon was the first choice but its public server was down on 2026-11-12. "Use where I am now" sends coordinates rounded to 2 decimals for a one-off reverse lookup; not stored.
 
 ## Data model (draft)
 
 - `users` *(built)*: id, nickname (unique, case-insensitive, 3-20), is_admin, banned_at, ban_reason, timestamps. `avatar_post_id` comes with posts.
 - `identities` *(built)*: id, user_id, provider (`google_oauth2`/`github`/`developer`), uid; unique(provider, uid) and unique(user_id, provider)
-- `posts`: id, user_id, image_key, place_name, lat (rounded), lng (rounded), status (`processing`/`published`/`rejected`), timestamps
+- `posts` *(built)*: id, user_id, status (`processing`/`published`/`rejected`/`failed`), image_key, width, height, place_name, latitude/longitude (decimal(4,1), ~11 km), bear_score, failure_reason, timestamps
+- `solid_queue_*` *(built)*: background job tables, in the main database
 - `fat_bear_wins`: id, post_id, year, awarded_by (user_id)
 - `fat_bear_champions`: id, year (unique), bear_name, bear_number, blurb, post_id (nullable), image_key (nullable, for outside photos), credit, link_url, link_text
 - `follows`: id, follower_id, followee_id; unique pair
@@ -73,7 +77,8 @@ browser ──> Caddy (TLS, serves SPA + /media) ──> Rails API (web)  ──
 - **Q3 Place names:** Free-text place name, or pick from a list / geocoder (e.g. OSM Nominatim, free but rate limited)?
 - **Q4 Detector accuracy:** Test the COCO detector on real bear photos (close-ups, far away, cubs, water, night) and non-bear photos (dogs, people, teddy bears) before wiring it in.
 - **Q5 Ban appeals:** Should the banned screen include a contact method?
-- **Q7 Rate limit:** 1 upload/min/user plus a daily cap?
+- **Q9 People in photos:** The detector also reports a `person` score. Reject photos where a person is clearly visible (TOS rule 2)? Not wired in yet.
+- **Q10 Detector accuracy:** Only 2 real test photos so far (both correct). Run `detector/tests/evaluate.py` on a bigger labelled set before launch.
 
 ## Notes
 - `json` gem is pinned to 2.x: json 3.x breaks Rails 8.0's cookie encoder. Revisit when upgrading Rails.
@@ -82,7 +87,7 @@ browser ──> Caddy (TLS, serves SPA + /media) ──> Rails API (web)  ──
 ## Phases
 0. Repo, Docker skeleton, mockups, plan *(done)*
 1. Scaffold Rails API + React (Vite) SPA; SSO login, nickname, ban screen *(done)*
-2. Upload pipeline: worker + libvips + detector
+2. Upload pipeline: worker + libvips + detector *(done)*
 3. Feeds (Global/Following), profiles, follow
 4. Admin panel (bans, Fat Bear wins)
 5. Deploy (AWS/GCP cheap tier), TOS page

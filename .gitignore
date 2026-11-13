@@ -31,3 +31,7 @@ detector/models/*.pt
 
 # Local data
 data/
+
+# Photos (dev media and uploads; prod uses Docker volumes / R2)
+backend/public/media/
+backend/storage/uploads/

@@ -9,6 +9,9 @@ gem "json", "~> 2.10"
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
 # SSO. We keep only the provider's stable account id, never tokens.
+# Background jobs stored in MySQL (no Redis needed on a small server).
+gem "solid_queue", "~> 1.2"
+
 gem "omniauth", "~> 2.1"
 gem "omniauth-google-oauth2", "~> 1.2"
 gem "omniauth-github", "~> 2.0"

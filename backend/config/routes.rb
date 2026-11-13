@@ -9,5 +9,10 @@ Rails.application.routes.draw do
     resource :session, only: %i[show destroy]
     resource :signup, only: :create
     get "nicknames/check", to: "nicknames#check"
+
+    resources :posts, only: %i[create show]
+    get "users/:nickname/posts", to: "user_posts#index", as: :user_posts
+    get "places/search", to: "places#search"
+    get "places/reverse", to: "places#reverse"
   end
 end

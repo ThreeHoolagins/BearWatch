@@ -1,35 +1,7 @@
 require "test_helper"
 
 class AuthFlowTest < ActionDispatch::IntegrationTest
-  setup do
-    OmniAuth.config.test_mode = true
-    mock_sso(:github, "gh-123")
-  end
-
-  teardown do
-    OmniAuth.config.mock_auth.clear
-    OmniAuth.config.test_mode = false
-  end
-
-  def mock_sso(provider, uid)
-    OmniAuth.config.mock_auth[provider] = OmniAuth::AuthHash.new(provider: provider.to_s, uid:)
-  end
-
-  def sign_in_with(provider)
-    post "/auth/#{provider}"
-    follow_redirect!
-  end
-
-  def session_json
-    get "/api/session"
-    response.parsed_body
-  end
-
-  # Like the SPA: read the CSRF token from the session endpoint, send it as a header.
-  def api(method, path, params = {})
-    token = session_json["csrf_token"]
-    send(method, path, params:, headers: { "X-CSRF-Token" => token }, as: :json)
-  end
+  setup { mock_sso(:github, "gh-123") }
 
   test "new account: SSO, then nickname, then signed in" do
     sign_in_with(:github)

@@ -1,10 +1,13 @@
-import type { ReactElement } from 'react'
+import { useEffect, useState, type ReactElement } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { api } from '../api'
 import { Avatar } from '../components/Avatar'
+import { PostModal } from '../components/PostModal'
 import { CheckIcon, GitHubIcon, GoogleIcon, ShieldIcon, SignOutIcon, TrophyIcon } from '../components/icons'
 import { Shell } from '../components/Shell'
 import { SsoButton } from '../components/SsoButton'
 import { PROVIDER_LABELS, useSession, type Provider, type User } from '../session'
+import type { Post } from '../posts'
 import { useOpenTerms } from '../terms'
 
 const LINK_ERRORS: Record<string, string> = {
@@ -26,6 +29,18 @@ export function Profile({ user }: { user: User }) {
   const providers = [...new Set([...(session?.providers ?? []), ...linked])].filter((p) => p !== 'developer' || linked.includes(p))
   const justLinked = params.get('linked') as Provider | null
   const linkError = params.get('link_error')
+  const [posts, setPosts] = useState<Post[] | null>(null)
+  const [open, setOpen] = useState<Post | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    api<{ posts: Post[] }>(`/api/users/${encodeURIComponent(user.nickname)}/posts`)
+      .then((data) => !cancelled && setPosts(data.posts))
+      .catch(() => !cancelled && setPosts([]))
+    return () => {
+      cancelled = true
+    }
+  }, [user.nickname])
 
   return (
     <Shell>
@@ -44,8 +59,24 @@ export function Profile({ user }: { user: User }) {
         </div>
       </div>
 
-      <div className="ptitle">0 bears spotted</div>
-      <p className="fine pad">Photos you post will show up here, three across.</p>
+      <div className="ptitle">
+        {posts === null ? 'Loading bears…' : `${posts.length} bear${posts.length === 1 ? '' : 's'} spotted`}
+      </div>
+      {posts?.length === 0 && (
+        <p className="fine pad">
+          Photos you post will show up here, three across. <Link className="link" to="/post">Post your first bear</Link>
+        </p>
+      )}
+      {posts && posts.length > 0 && (
+        <div className="grid3">
+          {posts.map((post) => (
+            <button key={post.id} className="tile" onClick={() => setOpen(post)} aria-label={`Bear at ${post.place_name}`}>
+              {post.image_url && <img src={post.image_url} alt="" loading="lazy" />}
+            </button>
+          ))}
+        </div>
+      )}
+      {open && <PostModal post={open} onClose={() => setOpen(null)} />}
 
       <section className="signins panel">
         <h3>Sign-in methods</h3>

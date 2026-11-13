@@ -1,9 +1,19 @@
 # Development stack:  docker compose up
-#   http://localhost:5173  -> Vite dev server (SPA). /api and /auth are proxied
-#                             to Rails, so the browser sees a single origin.
+#   http://localhost:5173  -> Vite dev server (SPA). /api, /auth and /media are
+#                             proxied to Rails, so the browser sees one origin.
 # Production lives in compose.prod.yaml.
+#
+# Like production, the photo worker and bear detector sit only on the
+# `internal` network, which has no internet access.
 
 name: bearwatch-dev
+
+x-rails-env: &rails-env
+  RAILS_ENV: development
+  DATABASE_HOST: db
+  DATABASE_USERNAME: root
+  DATABASE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+  DETECTOR_URL: http://detector:8000
 
 services:
   web:
@@ -11,19 +21,45 @@ services:
       context: ./backend
       target: dev
     env_file: .env
-    environment:
-      RAILS_ENV: development
-      DATABASE_HOST: db
-      DATABASE_USERNAME: root
-      DATABASE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    environment: *rails-env
     volumes:
       - ./backend:/rails
       - bundle:/usr/local/bundle
     ports:
       - "3000:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:3000/up"]
+      interval: 5s
+      timeout: 3s
+      retries: 60
     depends_on:
       db:
         condition: service_healthy
+    networks: [default, internal]
+
+  # Processes uploads (libvips + bear check). No internet access.
+  worker:
+    build:
+      context: ./backend
+      target: dev
+    command: ["bin/jobs"]
+    env_file: .env
+    environment: *rails-env
+    volumes:
+      - ./backend:/rails
+      - bundle:/usr/local/bundle
+    depends_on:
+      web:
+        condition: service_healthy # web installs gems and runs migrations
+      detector:
+        condition: service_healthy
+    networks: [internal]
+
+  detector:
+    build: ./detector
+    environment:
+      BEAR_CONFIDENCE_THRESHOLD: ${BEAR_CONFIDENCE_THRESHOLD:-0.85}
+    networks: [internal]
 
   frontend:
     image: node:22-alpine
@@ -53,6 +89,12 @@ services:
       interval: 3s
       timeout: 5s
       retries: 40
+    networks: [internal]
+
+networks:
+  default: {}
+  internal:
+    internal: true
 
 volumes:
   bundle:

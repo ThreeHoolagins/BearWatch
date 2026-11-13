@@ -1,5 +1,6 @@
 class User < ApplicationRecord
   has_many :identities, dependent: :destroy
+  has_many :posts, dependent: :destroy
 
   normalizes :nickname, with: ->(nickname) { nickname.strip }
 

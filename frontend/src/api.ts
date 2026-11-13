@@ -24,18 +24,34 @@ export class ApiError extends Error {
 
 export async function api<T>(path: string, options: { method?: string; body?: unknown } = {}): Promise<T> {
   const method = options.method ?? 'GET'
+  const isForm = options.body instanceof FormData
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (method !== 'GET') headers['X-CSRF-Token'] = csrfToken
-  if (options.body !== undefined) headers['Content-Type'] = 'application/json'
+  // FormData (file uploads) sets its own multipart Content-Type.
+  if (options.body !== undefined && !isForm) headers['Content-Type'] = 'application/json'
 
   const response = await fetch(path, {
     method,
     headers,
     credentials: 'same-origin',
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    body: options.body === undefined ? undefined : isForm ? (options.body as FormData) : JSON.stringify(options.body),
   })
   const text = await response.text()
-  const data: unknown = text ? JSON.parse(text) : null
+  let data: unknown = null
+  try {
+    data = text ? JSON.parse(text) : null
+  } catch {
+    data = null // e.g. a proxy's HTML "request too large" page
+  }
   if (!response.ok) throw new ApiError(response.status, data)
   return data as T
+}
+
+// The server's human-readable message, if it sent one.
+export function errorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    const message = (error.body as { message?: unknown } | null)?.message
+    if (typeof message === 'string' && message) return message
+  }
+  return fallback
 }

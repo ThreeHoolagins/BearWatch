@@ -3,7 +3,17 @@
 {$APP_HOST:localhost} {
 	encode zstd gzip
 
+	# Photo uploads: 12 MB photo plus form fields. Everything else stays small.
+	handle /api/posts {
+		request_body {
+			max_size 13MB
+		}
+		reverse_proxy web:3000
+	}
 	handle /api/* {
+		request_body {
+			max_size 1MB
+		}
 		reverse_proxy web:3000
 	}
 	handle /auth/* {
