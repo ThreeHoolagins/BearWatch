@@ -7,7 +7,7 @@ module Api
       user = User.find_by(nickname: params[:nickname])
       return head :not_found unless user && (!user.banned? || user == current_user)
 
-      posts = user.posts.published.includes(user: :avatar_post).page(before: params[:before], limit: 30).to_a
+      posts = user.posts.published.includes(:fat_bear_win, user: :avatar_post).page(before: params[:before], limit: 30).to_a
       render json: { posts:, next_before: posts.size == 30 ? posts.last.id : nil }
     end
   end

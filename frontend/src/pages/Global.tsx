@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ChampionBanner } from '../components/ChampionCard'
 import { Feed } from '../components/Feed'
 import { LocateIcon, PinIcon } from '../components/icons'
 import { Shell } from '../components/Shell'
@@ -38,6 +39,7 @@ export function Global() {
           {location.state === 'on' ? 'Within 500 mi of you' : 'Location off'}
         </span>
       </div>
+      <ChampionBanner />
 
       {location.state === 'on' ? (
         <Feed

@@ -113,7 +113,9 @@ module SignInHelper
   # Params as a hash or keywords; multipart: true for file uploads.
   def api(method, path, params = {}, multipart: false, **more)
     token = session_json["csrf_token"]
-    send(method, path, params: params.merge(more), headers: { "X-CSRF-Token" => token }, as: (multipart ? nil : :json))
+    # (Rails' test client turns `get ... as: :json` into a POST, so GETs go as plain params.)
+    format = multipart || method == :get ? nil : :json
+    send(method, path, params: params.merge(more), headers: { "X-CSRF-Token" => token }, as: format)
   end
 end
 

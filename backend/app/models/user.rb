@@ -48,6 +48,12 @@ class User < ApplicationRecord
     { nickname:, avatar:, ranger: is_admin }
   end
 
+  # Admin panel view.
+  def admin_json
+    { id:, nickname:, avatar:, ranger: is_admin, banned: banned?, ban_reason:, banned_at:, created_at:,
+      posts_count: posts.published.count }
+  end
+
   private
     def nickname_allowed
       errors.add(:nickname, "That nickname isn't allowed.") if nickname.present? && NicknameFilter.blocked?(nickname)

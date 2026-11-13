@@ -144,6 +144,9 @@ function ProfileView({ nickname }: { nickname: string }) {
           {grid.posts.map((post) => (
             <button key={post.id} className="tile" onClick={() => setOpen(post)} aria-label={`Bear at ${post.place_name}`}>
               {post.image_url && <img src={post.image_url} alt="" loading="lazy" />}
+              {post.fat_bear_win && (
+                <span className="winbadge"><TrophyIcon /><span>Fat Bear Week {post.fat_bear_win.year}</span></span>
+              )}
             </button>
           ))}
         </div>
@@ -155,7 +158,16 @@ function ProfileView({ nickname }: { nickname: string }) {
           </button>
         </div>
       )}
-      {open && <PostModal post={open} onClose={() => setOpen(null)} />}
+      {open && (
+        <PostModal
+          post={open}
+          onClose={() => setOpen(null)}
+          onChanged={() => {
+            void grid.reload()
+            void loadProfile()
+          }}
+        />
+      )}
 
       {profile?.me && <MyAccount />}
 

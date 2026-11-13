@@ -23,7 +23,7 @@ module Api
 
     private
       def render_page(scope)
-        posts = scope.includes(user: :avatar_post).page(before: params[:before]).to_a
+        posts = scope.includes(:fat_bear_win, user: :avatar_post).page(before: params[:before]).to_a
         render json: { posts:, next_before: posts.size == 20 ? posts.last.id : nil }
       end
   end

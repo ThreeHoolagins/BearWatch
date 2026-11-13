@@ -2,6 +2,10 @@ class Post < ApplicationRecord
   STATUSES = %w[processing published rejected failed].freeze
 
   belongs_to :user
+  has_one :fat_bear_win, dependent: :destroy
+
+  # Removing a post (by an admin) also removes the stored photo.
+  after_destroy_commit { DeletePhotoJob.perform_later(image_key, storage) if image_key }
 
   enum :status, STATUSES.index_by(&:itself), validate: true
 
@@ -49,6 +53,7 @@ class Post < ApplicationRecord
       failure_reason: failed? || rejected? ? failure_reason : nil,
       created_at:,
       user: user.public_json,
+      fat_bear_win: fat_bear_win && { id: fat_bear_win.id, year: fat_bear_win.year },
       # Where the bear is, for starting the avatar picker on it.
       bear_box: bear_x && [ bear_x, bear_y, bear_w, bear_h ]
     }

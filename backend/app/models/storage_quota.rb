@@ -37,7 +37,7 @@ module StorageQuota
 
     def usage
       month = StorageMonth.current
-      counted = Post.where(storage: "r2").sum(:image_bytes)
+      counted = Post.where(storage: "r2").sum(:image_bytes) + FatBearChampion.where(image_storage: "r2").sum(:image_bytes)
       Usage.new(
         bytes: [ counted, month.observed_bytes.to_i ].max,
         bytes_limit: (Float(ENV.fetch("R2_STORAGE_LIMIT_GB", "9.5")) * GB).to_i,

@@ -5,6 +5,7 @@ This doc records decisions as we make them, open questions, and build phases.
 
 ## Status
 - **Phase 0 (done):** repo, Docker skeleton, design mockups.
+- **Phase 4 (done, branch `phase-2-uploads`):** Ranger station: user search, ban/unban with reason (admins can't ban themselves or other admins), Fat Bear Week wins (one per year, awarded/revoked from the post pop-up, badges on posts and profiles), champion card editor (Bear Watch post or outside photo with credit and link, live preview) shown in the sidebar and as a mobile banner, admin post removal (deletes the stored photo). Alert email verified over Gmail SMTP.
 - **Phase 3 (done, branch `phase-2-uploads`):** Global feed (published bears within 500 miles, `ST_Distance_Sphere` with a bounding-box prefilter), Following feed, cursor pagination with infinite scroll, profiles for any user (`/u/:nickname`), follow/unfollow, bear-face avatars (crop + zoom + drag, starting on the detector's bear box).
 - **Phase 2 (done, branch `phase-2-uploads`):** photo uploads end to end: magic-byte checks, libvips re-encode to stripped WebP in a no-internet worker, YOLOX-S bear check, place search (Nominatim), rate limits, profile grid. Verified in dev and in the production stack.
 - **Phase 1 (done, branch `phase-1-auth`):** Rails 8 API + React SPA; SSO sign-in (Google, GitHub, dev-only developer login), nickname sign-up with live checks and a blocklist, account linking, ban screen, Terms modal, signpost/tab shell. Feeds, posting and admin screens are placeholders until their phases.
@@ -35,6 +36,8 @@ This doc records decisions as we make them, open questions, and build phases.
 | D22 | R2 live + "out of honey" cap | Photos go to R2 (`bearwatch-photos`, served from the r2.dev URL for now). Uploads stop at 9.5 GB / 950k writes / 9.5M reads with "Oops! Ran out of honey. A ranger needs to fix this." The owner gets one email per month (`ALERT_EMAIL`, via SMTP). Storage and writes are counted by the app; reads need an optional analytics token (the R2 token is bucket-scoped and can't read analytics). |
 | D23 | People in photos | Rejected when the detector's person score is ≥ 20% (`PERSON_MAX_SCORE`); same model pass, no extra compute. |
 | D24 | Job queues | `photos` runs in the offline worker; `online` (R2 uploads, email, usage checks) runs inside the web server via the Solid Queue Puma plugin. |
+| D25 | Moderation | Admins can remove a single post (photo deleted from storage) without banning. Outside champion photos are processed in the web request (admins only) with the same re-encode and metadata strip, no bear check. |
+| D26 | Alert email | Sent from a dedicated Gmail account via SMTP (App Password in `.env`) to the owner's address. |
 | D11 | Bear check | ~~bear-conservation detect step~~ → **Option B**: a permissively licensed COCO detector (e.g. YOLOX, Apache-2.0) run with `onnxruntime` (MIT), using COCO's built-in `bear` class at 85% confidence. Avoids Ultralytics' AGPL terms (bear-conservation is MIT but its model is trained with and runs on Ultralytics). Validate against real photos before committing to it. |
 | D19 | Photo storage | **Cloudflare R2** in production (free tier, no egress fees); local disk in development. Storage is swappable via `STORAGE_BACKEND`. The no-internet worker writes to a shared volume; the web container uploads to R2. Setup steps: `docs/r2-setup.md`. |
 | D20 | Repo visibility | **Private.** Still: keep secrets in `.env` only, run a secret scan before any change of mind. |
@@ -73,8 +76,8 @@ browser ──> Caddy (TLS, serves SPA + /media) ──> Rails API (web)  ──
 - `follows` *(built)*: follower_id, followee_id; unique pair
 - `users` avatar *(built)*: avatar_post_id (own published post), avatar_zoom (1-4), avatar_x/avatar_y (0-1 centre point)
 - `posts.bear_x/y/w/h` *(built)*: where the detector found the bear
-- `fat_bear_wins`: id, post_id, year, awarded_by (user_id)
-- `fat_bear_champions`: id, year (unique), bear_name, bear_number, blurb, post_id (nullable), image_key (nullable, for outside photos), credit, link_url, link_text
+- `fat_bear_wins` *(built)*: post_id, year (unique), awarded_by_id
+- `fat_bear_champions` *(built)*: year (unique), bear_name, bear_number, blurb, post_id **or** image_key/image_storage/size for an outside photo, credit, link_url (http/https only), link_text, updated_by_id
 
 ## Open questions
 - **Q1 Own-post deletion:** The mockup lets users delete their own posts (not in the original plan). Keep?
@@ -94,5 +97,5 @@ browser ──> Caddy (TLS, serves SPA + /media) ──> Rails API (web)  ──
 1. Scaffold Rails API + React (Vite) SPA; SSO login, nickname, ban screen *(done)*
 2. Upload pipeline: worker + libvips + detector *(done)*
 3. Feeds (Global/Following), profiles, follow *(done)*
-4. Admin panel (bans, Fat Bear wins)
+4. Admin panel (bans, Fat Bear wins) *(done)*
 5. Deploy (AWS/GCP cheap tier), TOS page

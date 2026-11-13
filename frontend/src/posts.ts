@@ -28,6 +28,7 @@ export interface Post {
   failure_reason: string | null
   created_at: string
   user: PublicUser
+  fat_bear_win: { id: number; year: number } | null
   // Where the detector found the bear: centre x, centre y, width, height (0-1).
   bear_box: [number, number, number, number] | null
 }
@@ -58,4 +59,45 @@ export function timeAgo(iso: string, now = Date.now()): string {
 
 export function profilePath(user: Pick<PublicUser, 'nickname'>, myNickname?: string) {
   return user.nickname === myNickname ? '/profile' : `/u/${encodeURIComponent(user.nickname)}`
+}
+
+export interface Champion {
+  year: number
+  bear_name: string
+  bear_number: string | null
+  blurb: string | null
+  photo: { url: string; width: number; height: number } | null
+  source: 'post' | 'outside'
+  post_id: number | null
+  poster: PublicUser | null
+  credit: string | null
+  link_url: string | null
+  link_text: string | null
+}
+
+export interface AdminUser {
+  id: number
+  nickname: string
+  avatar: PublicUser['avatar']
+  ranger: boolean
+  banned: boolean
+  ban_reason: string | null
+  banned_at: string | null
+  created_at: string
+  posts_count: number
+}
+
+export interface Win {
+  id: number
+  year: number
+  post: Post
+}
+
+// Fat Bear Week started in 2014; wins can be awarded up to next year.
+export const FIRST_FAT_BEAR_YEAR = 2014
+export const LAST_FAT_BEAR_YEAR = new Date().getFullYear() + 1
+
+// Fat Bear Week runs in early October.
+export function currentFatBearYear(now = new Date()) {
+  return now.getMonth() >= 9 ? now.getFullYear() : now.getFullYear() - 1
 }

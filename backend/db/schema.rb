@@ -10,7 +10,40 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_13_000002) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_14_000001) do
+  create_table "fat_bear_champions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.integer "year", null: false
+    t.string "bear_name", limit: 60, null: false
+    t.string "bear_number", limit: 10
+    t.string "blurb", limit: 200
+    t.bigint "post_id"
+    t.string "image_key", limit: 64
+    t.string "image_storage", limit: 8
+    t.integer "image_width"
+    t.integer "image_height"
+    t.integer "image_bytes"
+    t.string "credit", limit: 150
+    t.string "link_url", limit: 500
+    t.string "link_text", limit: 80
+    t.bigint "updated_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["post_id"], name: "index_fat_bear_champions_on_post_id"
+    t.index ["updated_by_id"], name: "index_fat_bear_champions_on_updated_by_id"
+    t.index ["year"], name: "index_fat_bear_champions_on_year", unique: true
+  end
+
+  create_table "fat_bear_wins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.bigint "post_id", null: false
+    t.integer "year", null: false
+    t.bigint "awarded_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["awarded_by_id"], name: "index_fat_bear_wins_on_awarded_by_id"
+    t.index ["post_id"], name: "index_fat_bear_wins_on_post_id"
+    t.index ["year"], name: "index_fat_bear_wins_on_year", unique: true
+  end
+
   create_table "follows", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "follower_id", null: false
     t.bigint "followee_id", null: false
@@ -235,6 +268,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_000002) do
     t.index ["nickname"], name: "index_users_on_nickname", unique: true
   end
 
+  add_foreign_key "fat_bear_champions", "posts", on_delete: :nullify
+  add_foreign_key "fat_bear_champions", "users", column: "updated_by_id", on_delete: :nullify
+  add_foreign_key "fat_bear_wins", "posts", on_delete: :cascade
+  add_foreign_key "fat_bear_wins", "users", column: "awarded_by_id", on_delete: :nullify
   add_foreign_key "follows", "users", column: "followee_id"
   add_foreign_key "follows", "users", column: "follower_id"
   add_foreign_key "identities", "users"

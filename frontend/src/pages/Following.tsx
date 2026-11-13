@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ChampionBanner } from '../components/ChampionCard'
 import { Feed } from '../components/Feed'
 import { TreeIcon } from '../components/icons'
 import { Shell } from '../components/Shell'
@@ -9,6 +10,7 @@ export function Following() {
       <div className="pagehead">
         <h2>Following</h2>
       </div>
+      <ChampionBanner />
       <Feed
         url="/api/feed/following"
         empty={

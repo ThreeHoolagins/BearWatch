@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { profilePath, timeAgo, type Post } from '../posts'
 import { Avatar } from './Avatar'
-import { PinIcon } from './icons'
+import { PinIcon, TrophyIcon } from './icons'
 
 export function PostCard({ post, me, onOpen }: { post: Post; me?: string; onOpen: (post: Post) => void }) {
   return (
@@ -12,6 +12,7 @@ export function PostCard({ post, me, onOpen }: { post: Post; me?: string; onOpen
         <time dateTime={post.created_at}>{timeAgo(post.created_at)}</time>
       </Link>
       <button className="photo-btn" onClick={() => onOpen(post)} aria-label={`Open bear photo from ${post.place_name}`}>
+        {post.fat_bear_win && <span className="winbadge"><TrophyIcon />Fat Bear Week {post.fat_bear_win.year}</span>}
         {post.image_url && (
           <img
             src={post.image_url}

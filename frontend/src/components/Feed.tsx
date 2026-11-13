@@ -38,7 +38,7 @@ export function Feed({ url, empty }: { url: string | null; empty: ReactNode }) {
       ))}
       {hasMore && <div ref={sentinel} className="loading">{loading ? 'Loading more bears…' : ''}</div>}
       {!hasMore && posts.length > 3 && <div className="end">You've reached the end of the trail.</div>}
-      {open && <PostModal post={open} onClose={() => setOpen(null)} />}
+      {open && <PostModal post={open} onClose={() => setOpen(null)} onChanged={() => void reload()} />}
     </>
   )
 }

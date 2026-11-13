@@ -37,15 +37,19 @@ docker compose run --rm -v /path/to/photos:/photos:ro detector python tests/eval
 
 Then set `BEAR_CONFIDENCE_THRESHOLD` in `.env`.
 
-### Admin chores
+### Admins (the Ranger station)
 
-Until the admin panel lands (Phase 4):
+Make your own account an admin once, from the command line:
 
 ```sh
-docker compose exec web bin/rails "bearwatch:admin[nickname]"
-docker compose exec web bin/rails "bearwatch:ban[nickname,Reason the user will see.]"
-docker compose exec web bin/rails "bearwatch:unban[nickname]"
+docker compose exec web bin/rails "bearwatch:admin[your_nickname]"
 ```
+
+After that, use **Admin panel** (account menu on desktop, your profile on phones) to search users, ban/unban with a reason, and edit the Fat Bear Week champion card. Open any post to award or revoke a Fat Bear Week win or remove the post. The `bearwatch:ban` / `bearwatch:unban` rake tasks still work too.
+
+### Photo storage and the "out of honey" cap
+
+See `docs/r2-setup.md`. Check usage with `docker compose exec web bin/rails bearwatch:storage:status`.
 
 ### Tests and checks
 

@@ -460,3 +460,101 @@ button.drop .btn { margin-top: 14px; }
   .pactions .btn { flex: 0 0 auto; }
   .avpick { grid-template-columns: 200px 1fr; align-items: start; }
 }
+
+/* ================= Phase 4: Ranger station & Fat Bear Week ================= */
+.winbadge {
+  display: inline-flex; align-items: center; gap: 5px; background: var(--gold); color: var(--forest);
+  font-family: var(--slab); font-weight: 700; font-size: 12px; padding: 3px 8px; border-radius: 4px; white-space: nowrap;
+}
+.winbadge svg { width: 14px; height: 14px; }
+.photo-btn, .tile { position: relative; }
+.photo-btn .winbadge, .tile .winbadge { position: absolute; top: 8px; left: 8px; z-index: 1; }
+.tile .winbadge { top: 5px; left: 5px; padding: 3px; }
+.tile .winbadge span { display: none; }
+.where .winbadge.inline { margin-left: auto; }
+
+/* champion card */
+.champ .name { font-family: var(--slab); font-size: 18px; font-weight: 700; color: var(--forest); }
+.champ .num { font-weight: 500; font-size: 14px; opacity: .75; }
+.champ .credit { font-size: 11px; opacity: .85; margin-top: 6px; }
+.champ-photo { display: block; width: 100%; max-height: 260px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
+.modal.champ .mbody { font-size: 14px; }
+.modal.champ .champ-photo { max-height: 60dvh; object-fit: contain; background: #1b1b1b; }
+.champ-mob {
+  display: flex; gap: 12px; align-items: center; width: calc(100% - 28px); margin: 0 14px 16px; padding: 10px; text-align: left;
+  font: inherit; color: inherit; cursor: pointer;
+}
+.champ-mob img { width: 58px; height: 58px; object-fit: cover; border-radius: 8px; flex: none; }
+.champ-mob .k { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--wood); }
+.champ-mob .k svg { width: 14px; height: 14px; color: var(--gold); }
+.champ-mob .name { font-family: var(--slab); font-size: 17px; font-weight: 700; color: var(--forest); }
+.champ-mob .tap { font-size: 12px; opacity: .75; }
+
+/* post pop-up: ranger tools */
+.ranger-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; }
+.ranger-tools .award { display: inline-flex; gap: 6px; align-items: center; }
+.ranger-tools select { font: inherit; font-size: 13px; padding: 5px 6px; border: 2px solid var(--forest); border-radius: 6px; background: var(--surface); }
+.ranger-tools .btn svg { width: 15px; height: 15px; }
+.ranger-tools .danger { margin-left: auto; }
+.ranger-tools .msg { width: 100%; }
+
+/* admin page */
+.atabs { display: flex; gap: 8px; padding: 0 14px 14px; }
+.atabs button {
+  flex: 1; padding: 9px 10px; border-radius: 6px; border: 2px solid var(--forest); background: transparent; color: var(--forest);
+  font-family: var(--slab); font-size: 15px; font-weight: 700; cursor: pointer;
+}
+.atabs button.on { background: var(--forest); color: var(--gold); }
+.admin-filters { display: flex; gap: 12px; align-items: center; padding: 0 14px 12px; }
+.admin-filters .search {
+  flex: 1; min-width: 0; font: inherit; font-size: 15px; padding: 10px 12px; outline: none; color: var(--ink);
+  border: 2px solid var(--forest); border-radius: 6px; background: var(--surface);
+}
+.admin-filters .toggle { display: flex; gap: 6px; align-items: center; font-size: 13px; white-space: nowrap; }
+.ulist { margin: 0 14px 16px; overflow: hidden; }
+.urow { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-bottom: 1px dashed rgba(31, 59, 45, .3); }
+.urow:last-child { border-bottom: 0; }
+.urow .info { flex: 1; min-width: 0; }
+.urow .uname { font-family: var(--slab); font-size: 16px; font-weight: 700; color: var(--forest); text-decoration: none; }
+.urow .uname:hover { text-decoration: underline; }
+.urow .meta, .urow.meta { font-size: 12px; opacity: .7; }
+.urow .why { font-size: 12px; color: var(--bad); margin-top: 2px; }
+.urow.title { font-family: var(--slab); font-weight: 700; color: var(--forest); font-size: 17px; }
+.urow .thumb { width: 46px; height: 46px; flex: none; padding: 0; border: 0; border-radius: 6px; overflow: hidden; cursor: pointer; background: var(--sage); }
+.urow .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.status { font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 3px 7px; border-radius: 4px; margin-left: 6px; vertical-align: 2px; }
+.status.active { background: rgba(47, 107, 69, .15); color: var(--ok); }
+.status.banned { background: rgba(156, 50, 25, .15); color: var(--bad); }
+.status.ranger { background: var(--forest); color: var(--gold); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.chips button { font: inherit; font-size: 12px; padding: 5px 10px; border-radius: 999px; border: 1.5px solid var(--forest); background: transparent; color: var(--forest); cursor: pointer; }
+.chips button:hover { background: rgba(31, 59, 45, .08); }
+.field textarea, .field select, .field input[type=number], .field input[type=url] {
+  width: 100%; font: inherit; font-size: 15px; padding: 10px 12px; outline: none; color: var(--ink);
+  border: 2px solid var(--forest); border-radius: 6px; background: var(--surface);
+}
+.form .field input:not([type=file]):not([type=radio]) { padding-right: 12px; }
+.tight-top { margin-top: 0; }
+.fbw { display: grid; gap: 16px; padding: 0 14px 16px; }
+.fbw .form { padding: 16px; margin-bottom: 16px; }
+.fbw .form h3 { margin: 0 0 12px; font-size: 19px; }
+.fbw .winlist { margin: 0; }
+.fbw .label { font-family: var(--slab); font-weight: 600; color: var(--forest); margin-bottom: 6px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.radios { display: flex; gap: 8px; margin-bottom: 14px; }
+.radios label { flex: 1; display: flex; gap: 8px; align-items: center; padding: 9px 10px; border: 2px solid rgba(31, 59, 45, .35); border-radius: 6px; cursor: pointer; font-size: 13px; }
+.radios label.on { border-color: var(--forest); background: rgba(31, 59, 45, .06); font-weight: 600; }
+.previewlabel { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .7; margin: 0 0 8px; }
+
+@media (min-width: 820px) {
+  .champ-mob { width: 100%; margin-left: 0; margin-right: 0; }
+  .atabs { padding: 0 0 16px; max-width: 360px; }
+  .admin-filters { padding: 0 0 12px; }
+  .ulist { margin-left: 0; margin-right: 0; }
+  .fbw { grid-template-columns: minmax(0, 1fr) 300px; padding: 0 0 16px; align-items: start; }
+  .tile .winbadge { padding: 3px 8px; top: 8px; left: 8px; }
+  .tile .winbadge span { display: inline; }
+}
+@media (min-width: 1150px) {
+  .withrail .champ-mob { display: none; }
+}

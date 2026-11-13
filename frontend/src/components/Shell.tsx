@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useOpenTerms } from '../terms'
 import { Band } from './Band'
+import { RailChampion } from './ChampionCard'
 import { FollowingIcon, GlobalIcon, PostIcon, ProfileIcon, TreeIcon } from './icons'
 
 const TABS = [
@@ -34,6 +35,7 @@ export function Shell({ children, rail = false, wide = false, back = false }: { 
         <main className={`main ${wide ? 'wide' : ''}`}>{children}</main>
         {rail && (
           <aside className="rail">
+            <RailChampion />
             <div className="rcard panel">
               <h3>
                 <TreeIcon className="tree" />

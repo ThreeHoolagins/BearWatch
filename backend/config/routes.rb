@@ -21,6 +21,17 @@ Rails.application.routes.draw do
       delete "follow", to: "users#unfollow"
     end
     put "me/avatar", to: "avatars#update"
+    get "champion", to: "champions#show"
+
+    namespace :admin do
+      get "users", to: "users#index"
+      post "users/:nickname/ban", to: "users#ban", constraints: { nickname: /[A-Za-z0-9_]+/ }
+      delete "users/:nickname/ban", to: "users#unban", constraints: { nickname: /[A-Za-z0-9_]+/ }
+      resources :wins, only: %i[index create destroy]
+      resources :posts, only: %i[index destroy]
+      get "champion", to: "champions#show"
+      put "champion/:year", to: "champions#update"
+    end
     get "places/search", to: "places#search"
     get "places/reverse", to: "places#reverse"
   end

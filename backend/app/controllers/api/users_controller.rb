@@ -9,7 +9,7 @@ module Api
         user: @user.public_json.merge(
           followers_count: @user.follower_links.count,
           following_count: @user.following_links.count,
-          fat_bear_wins: 0, # awarded by admins in Phase 4
+          fat_bear_wins: FatBearWin.joins(:post).where(posts: { user_id: @user.id }).count,
           posts_count: @user.posts.published.count,
           me: @user == current_user,
           following: current_user.following_links.exists?(followee: @user)
