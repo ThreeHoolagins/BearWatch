@@ -3,6 +3,7 @@ require "test_helper"
 class PostsTest < ActionDispatch::IntegrationTest
   include TestImages
   include ActiveJob::TestHelper
+  include ActionMailer::TestHelper
 
   setup do
     @user = User.create!(nickname: "grizzwald")
@@ -60,6 +61,24 @@ class PostsTest < ActionDispatch::IntegrationTest
     Post.update_all(status: "rejected")
     upload
     assert_response :accepted
+  end
+
+  test "out of honey: uploads stop with the ranger message and one email goes out" do
+    ENV["R2_STORAGE_LIMIT_GB"] = "0"
+    ENV["ALERT_EMAIL"] = "ranger@example.com"
+    stubbing(PhotoStorage, :r2?, true) do
+      assert_enqueued_emails(1) do
+        2.times do
+          assert_no_enqueued_jobs(only: ProcessPhotoJob) { upload }
+          assert_response :service_unavailable
+          assert_equal "Oops! Ran out of honey. A ranger needs to fix this.", response.parsed_body["message"]
+        end
+      end
+    end
+    assert_equal 0, Post.count
+  ensure
+    ENV.delete("R2_STORAGE_LIMIT_GB")
+    ENV.delete("ALERT_EMAIL")
   end
 
   test "banned and signed-out users can't upload" do

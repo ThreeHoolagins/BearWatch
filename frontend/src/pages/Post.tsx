@@ -22,6 +22,10 @@ const OUTCOME_MESSAGES: Record<string, string> = {
   too_large: 'That photo has too many pixels for us (over 50 megapixels). Try a smaller version.',
   unreadable: "We couldn't open that photo. Try saving it as a JPG or PNG first.",
   detector_unavailable: 'Our bear checker is napping. Please try again in a few minutes.',
+  person: "We spotted a person in this photo. Bear Watch is bears only, so please share one without people in it.",
+  out_of_storage: 'Oops! Ran out of honey. A ranger needs to fix this.',
+  storage_unavailable: "We couldn't save your photo just now. Please try again in a few minutes.",
+  processing_error: 'Something went wrong with that photo on our end. Please try again.',
 }
 
 function fileProblem(file: File): string | null {
@@ -201,7 +205,9 @@ export function Post() {
 
       {stage.name === 'rejected' && (
         <div className="outcome oops panel" role="alert">
-          <h3>{stage.reason === 'no_bear' ? 'Hmm, no bear found' : 'That one didn’t work'}</h3>
+          <h3>
+            {stage.reason === 'no_bear' ? 'Hmm, no bear found' : stage.reason === 'person' ? 'Bears only, please' : 'That one didn’t work'}
+          </h3>
           <p>{OUTCOME_MESSAGES[stage.reason ?? ''] ?? "Something went wrong with that photo. Please try another."}</p>
           <button className="btn wood" onClick={startOver}>Try another photo</button>
         </div>

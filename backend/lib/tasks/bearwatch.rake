@@ -25,3 +25,29 @@ namespace :bearwatch do
     puts "#{user.nickname} is no longer banned."
   end
 end
+
+namespace :bearwatch do
+  namespace :storage do
+    desc "Show R2 usage against the free-tier cap"
+    task status: :environment do
+      puts "Storage backend: #{PhotoStorage.r2? ? "Cloudflare R2 (#{ENV["R2_BUCKET"]})" : "local disk"}"
+      puts StorageQuota.usage.summary
+      month = StorageMonth.current
+      puts "Last bucket measurement: #{month.observed_at || "never"}"
+      puts "Out-of-honey email this month: #{month.alerted_at || "not sent"}"
+      puts StorageQuota.exhausted? ? "Uploads: PAUSED (out of honey)" : "Uploads: open"
+    end
+
+    desc "Measure the bucket now (normally runs every 6 hours)"
+    task check: :environment do
+      CheckStorageUsageJob.perform_now
+      Rake::Task["bearwatch:storage:status"].invoke
+    end
+
+    desc "Allow another out-of-honey email this month"
+    task reset_alert: :environment do
+      StorageMonth.current.update!(alerted_at: nil)
+      puts "Alert reset."
+    end
+  end
+end

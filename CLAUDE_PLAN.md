@@ -31,6 +31,9 @@ This doc records decisions as we make them, open questions, and build phases.
 | D16 | Terms of Service | Opens as a modal with a scrolling body and a Close button bottom-right. Linked from login, nickname, sidebar, rail, menu, profile and banned screens. |
 | D17 | Nickname filter | Format/length checks plus a blocklist: LDNOOBW English list (CC BY 4.0) with leetspeak normalisation, an allowlist for innocent words ("grape", "button"), and reserved names (`*admin`, `*bearwatch`, `*moderator` anywhere; `ranger`, `staff`, etc. only as the whole name). Lists live in `backend/config/nickname_filter/`. |
 | D18 | Sign-up window | After SSO for a new account, the person has 30 minutes to pick a nickname before starting over. |
+| D22 | R2 live + "out of honey" cap | Photos go to R2 (`bearwatch-photos`, served from the r2.dev URL for now). Uploads stop at 9.5 GB / 950k writes / 9.5M reads with "Oops! Ran out of honey. A ranger needs to fix this." The owner gets one email per month (`ALERT_EMAIL`, via SMTP). Storage and writes are counted by the app; reads need an optional analytics token (the R2 token is bucket-scoped and can't read analytics). |
+| D23 | People in photos | Rejected when the detector's person score is ≥ 20% (`PERSON_MAX_SCORE`); same model pass, no extra compute. |
+| D24 | Job queues | `photos` runs in the offline worker; `online` (R2 uploads, email, usage checks) runs inside the web server via the Solid Queue Puma plugin. |
 | D11 | Bear check | ~~bear-conservation detect step~~ → **Option B**: a permissively licensed COCO detector (e.g. YOLOX, Apache-2.0) run with `onnxruntime` (MIT), using COCO's built-in `bear` class at 85% confidence. Avoids Ultralytics' AGPL terms (bear-conservation is MIT but its model is trained with and runs on Ultralytics). Validate against real photos before committing to it. |
 | D19 | Photo storage | **Cloudflare R2** in production (free tier, no egress fees); local disk in development. Storage is swappable via `STORAGE_BACKEND`. The no-internet worker writes to a shared volume; the web container uploads to R2. Setup steps: `docs/r2-setup.md`. |
 | D20 | Repo visibility | **Private.** Still: keep secrets in `.env` only, run a secret scan before any change of mind. |
@@ -77,7 +80,6 @@ browser ──> Caddy (TLS, serves SPA + /media) ──> Rails API (web)  ──
 - **Q3 Place names:** Free-text place name, or pick from a list / geocoder (e.g. OSM Nominatim, free but rate limited)?
 - **Q4 Detector accuracy:** Test the COCO detector on real bear photos (close-ups, far away, cubs, water, night) and non-bear photos (dogs, people, teddy bears) before wiring it in.
 - **Q5 Ban appeals:** Should the banned screen include a contact method?
-- **Q9 People in photos:** The detector also reports a `person` score. Reject photos where a person is clearly visible (TOS rule 2)? Not wired in yet.
 - **Q10 Detector accuracy:** Only 2 real test photos so far (both correct). Run `detector/tests/evaluate.py` on a bigger labelled set before launch.
 
 ## Notes

@@ -16,6 +16,15 @@ class ProcessPhotoJob < ApplicationJob
     post = Post.find(post_id)
     return unless post.processing?
 
-    PhotoProcessor.new(post).call
+    begin
+      PhotoProcessor.new(post).call
+    rescue BearDetectorClient::Unavailable
+      raise # retried above
+    rescue StandardError
+      # Anything unexpected: don't leave the poster waiting on "processing" forever.
+      post.update_columns(status: "failed", failure_reason: "processing_error", updated_at: Time.current)
+      FileUtils.rm_f(post.raw_path)
+      raise
+    end
   end
 end

@@ -2,6 +2,7 @@ require "test_helper"
 
 class PhotoProcessorTest < ActiveSupport::TestCase
   include TestImages
+  include ActiveJob::TestHelper
 
   setup do
     @user = User.create!(nickname: "grizzwald")
@@ -42,6 +43,27 @@ class PhotoProcessorTest < ActiveSupport::TestCase
     assert_equal "no_bear", post.failure_reason
     assert_nil post.image_key
     assert_not File.exist?(post.raw_path)
+  end
+
+  test "rejects photos with a person in them" do
+    post = post_with(make_image("jpg"))
+    PhotoProcessor.new(post, detector: FakeDetector.new(is_bear: true, person_score: 0.4)).call
+
+    assert_equal [ "rejected", "person" ], [ post.reload.status, post.failure_reason ]
+    assert_nil post.image_key
+  end
+
+  test "with R2, hands the photo to the web process instead of publishing" do
+    post = post_with(make_image("jpg"))
+    stubbing(PhotoStorage, :r2?, true) do
+      assert_enqueued_with(job: StorePhotoJob, args: [ post.id ]) do
+        PhotoProcessor.new(post, detector: FakeDetector.new).call
+      end
+    end
+    post.reload
+    assert post.processing?, "published only once it's in R2"
+    assert PhotoStorage.media_path(post.image_key).exist?
+    assert post.image_bytes.positive?
   end
 
   test "rejects images over the pixel limit from the header alone" do

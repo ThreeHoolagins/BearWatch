@@ -14,10 +14,11 @@ from detector import BearDetector
 MAX_BYTES = 8 * 1024 * 1024  # re-encoded WebPs are well under this
 MODEL_PATH = os.environ.get("MODEL_PATH", "/models/yolox_s.onnx")
 THRESHOLD = float(os.environ.get("BEAR_CONFIDENCE_THRESHOLD", "0.85"))
+PERSON_THRESHOLD = float(os.environ.get("PERSON_MAX_SCORE", "0.20"))
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("detector")
-detector = BearDetector(MODEL_PATH, THRESHOLD)
+detector = BearDetector(MODEL_PATH, THRESHOLD, PERSON_THRESHOLD)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -25,7 +26,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/health":
-            return self._json(200, {"ok": True, "model": os.path.basename(MODEL_PATH), "threshold": THRESHOLD})
+            return self._json(200, {"ok": True, "model": os.path.basename(MODEL_PATH), "threshold": THRESHOLD,
+                                    "person_threshold": PERSON_THRESHOLD})
         self._json(404, {"error": "not_found"})
 
     def do_POST(self):
@@ -57,5 +59,6 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8000"))
-    log.info("bear detector listening on :%s (model=%s, threshold=%.2f)", port, MODEL_PATH, THRESHOLD)
+    log.info("bear detector listening on :%s (model=%s, bear>=%.2f, person<%.2f)", port, MODEL_PATH, THRESHOLD,
+             PERSON_THRESHOLD)
     ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()

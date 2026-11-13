@@ -7,7 +7,7 @@ require "active_job/railtie"
 require "active_record/railtie"
 # require "active_storage/engine"
 require "action_controller/railtie"
-# require "action_mailer/railtie"
+require "action_mailer/railtie"
 # require "action_mailbox/engine"
 # require "action_text/engine"
 require "action_view/railtie"
@@ -51,6 +51,22 @@ module Bearwatch
     # Background jobs (photo processing) run in the worker container via Solid
     # Queue, using the main database.
     config.active_job.queue_adapter = :solid_queue
+    # Queues: "photos" runs in the offline worker; "online" (R2 uploads, email,
+    # usage checks) runs inside the web process, which has internet access.
+    config.action_mailer.deliver_later_queue_name = "online"
+
+    # Email (storage alerts) goes out over SMTP when configured; see .env.example.
+    if ENV["SMTP_ADDRESS"].present? && ENV["SMTP_PASSWORD"].present?
+      config.action_mailer.delivery_method = :smtp
+      config.action_mailer.smtp_settings = {
+        address: ENV["SMTP_ADDRESS"], port: ENV.fetch("SMTP_PORT", 587).to_i,
+        user_name: ENV["SMTP_USERNAME"], password: ENV["SMTP_PASSWORD"],
+        authentication: :plain, enable_starttls_auto: true
+      }
+    else
+      config.action_mailer.delivery_method = Rails.env.test? ? :test : :file
+    end
+    config.action_mailer.raise_delivery_errors = true
 
     # Rate limiting (ActionController::RateLimiting) needs a real cache store.
     config.cache_store = :memory_store

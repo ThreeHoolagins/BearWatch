@@ -68,6 +68,7 @@ Add these to `.env` on the server (never commit them):
 
 ```sh
 STORAGE_BACKEND=r2
+R2_ACCOUNT_ID=<the long id in your endpoint URL>
 R2_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
 R2_BUCKET=bearwatch-photos
 R2_ACCESS_KEY_ID=...
@@ -80,6 +81,35 @@ Then restart: `docker compose -f compose.prod.yaml up -d`.
 How it fits the upload pipeline: the image worker has **no internet access** by
 design, so it never talks to R2. It writes the finished WebP to a shared
 volume, and the web container uploads it to R2 and deletes the local copy.
+Photos already stored on local disk keep working; only new ones go to R2.
+Non-production environments use their own folder in the bucket
+(`development/...`) so test photos are easy to spot and delete.
+
+## The free-tier cap ("Out of honey")
+
+Bear Watch stops accepting uploads before it would cost you anything:
+
+| Limit | Free tier | Bear Watch stops at | Setting |
+|---|---|---|---|
+| Storage | 10 GB | 9.5 GB | `R2_STORAGE_LIMIT_GB` |
+| Writes (Class A) | 1,000,000 / month | 950,000 | `R2_CLASS_A_LIMIT` |
+| Reads (Class B) | 10,000,000 / month | 9,500,000 | `R2_CLASS_B_LIMIT` |
+
+When a limit is hit, uploaders see *"Oops! Ran out of honey. A ranger needs to
+fix this."* and `ALERT_EMAIL` gets one email per month (needs the `SMTP_*`
+settings).
+
+Storage and writes are counted by Bear Watch itself (it's the only thing
+writing to the bucket), and the bucket is measured every 6 hours as a
+cross-check. **Reads** happen directly between browsers and Cloudflare, so to
+cap them too, create a second API token with **Account → Account Analytics →
+Read** and set `R2_ANALYTICS_TOKEN`.
+
+```sh
+docker compose exec web bin/rails bearwatch:storage:status       # usage now
+docker compose exec web bin/rails bearwatch:storage:check        # measure the bucket now
+docker compose exec web bin/rails bearwatch:storage:reset_alert  # allow another email this month
+```
 
 ## 6. Billing alert
 
@@ -94,13 +124,3 @@ If the secret leaks or you just want to rotate it:
 1. Create a new token (step 3).
 2. Update `.env` and restart the app.
 3. Delete the old token in **Manage R2 API Tokens**.
-
-## Moving existing photos from disk to R2
-
-Before switching `STORAGE_BACKEND`, copy what's already on disk:
-
-```sh
-docker compose -f compose.prod.yaml exec web bin/rails bearwatch:storage:migrate_to_r2
-```
-
-*(This task arrives with the upload pipeline in Phase 2.)*

@@ -21,7 +21,13 @@ services:
       context: ./backend
       target: dev
     env_file: .env
-    environment: *rails-env
+    environment:
+      <<: *rails-env
+      # Runs the "online" job queue (R2 uploads, alert email, usage checks)
+      # inside the web server, which has internet access.
+      SOLID_QUEUE_IN_PUMA: "1"
+      SOLID_QUEUE_CONFIG: config/queue_web.yml
+      SOLID_QUEUE_SKIP_RECURRING: "true"
     volumes:
       - ./backend:/rails
       - bundle:/usr/local/bundle
@@ -59,6 +65,7 @@ services:
     build: ./detector
     environment:
       BEAR_CONFIDENCE_THRESHOLD: ${BEAR_CONFIDENCE_THRESHOLD:-0.85}
+      PERSON_MAX_SCORE: ${PERSON_MAX_SCORE:-0.20}
     networks: [internal]
 
   frontend:

@@ -20,7 +20,8 @@ IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
 def main():
     root = sys.argv[1]
     detector = BearDetector(os.environ.get("MODEL_PATH", "/models/yolox_s.onnx"),
-                            float(os.environ.get("BEAR_CONFIDENCE_THRESHOLD", "0.85")))
+                            float(os.environ.get("BEAR_CONFIDENCE_THRESHOLD", "0.85")),
+                            float(os.environ.get("PERSON_MAX_SCORE", "0.20")))
     correct = total = 0
     for label in ("bears", "not_bears"):
         folder = os.path.join(root, label)
@@ -32,7 +33,8 @@ def main():
             with open(os.path.join(folder, name), "rb") as f:
                 result = detector.detect(f.read())
             expected = label == "bears"
-            ok = result.is_bear == expected
+            accepted = result.is_bear and not result.person_detected
+            ok = accepted == expected
             correct += ok
             total += 1
             print(f"{'ok  ' if ok else 'MISS'} {label}/{name}: bear {result.bear_score:.0%}, "

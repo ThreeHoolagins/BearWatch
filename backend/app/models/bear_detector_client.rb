@@ -7,7 +7,7 @@ class BearDetectorClient
   # The detector couldn't read the image.
   class Unreadable < StandardError; end
 
-  Verdict = Data.define(:is_bear, :bear_score, :person_score, :runner_up, :runner_up_score)
+  Verdict = Data.define(:is_bear, :bear_score, :person_detected, :person_score, :runner_up, :runner_up_score)
 
   def initialize(url: ENV.fetch("DETECTOR_URL", "http://detector:8000"))
     @uri = URI.join(url, "/detect")

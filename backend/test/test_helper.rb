@@ -20,6 +20,20 @@ module ActiveSupport
   end
 end
 
+# Temporarily replace a class method (minitest/mock isn't bundled with Minitest 6).
+#   stubbing(PhotoStorage, :r2?, true) { ... }
+module Stubbing
+  def stubbing(target, name, value)
+    original = target.method(name)
+    target.define_singleton_method(name) { |*| value }
+    yield
+  ensure
+    target.define_singleton_method(name, original)
+  end
+end
+
+ActiveSupport::TestCase.include(Stubbing)
+
 # Test images are generated with the libvips CLI instead of committing binaries.
 module TestImages
   DIR = Rails.root.join("tmp/test-images")
@@ -58,8 +72,9 @@ end
 class FakeDetector
   attr_reader :calls
 
-  def initialize(is_bear: true, bear_score: 0.95, error: nil)
-    @verdict = BearDetectorClient::Verdict.new(is_bear:, bear_score:, person_score: 0.0, runner_up: "dog", runner_up_score: 0.1)
+  def initialize(is_bear: true, bear_score: 0.95, person_score: 0.0, error: nil)
+    @verdict = BearDetectorClient::Verdict.new(is_bear:, bear_score:, person_detected: person_score >= 0.2, person_score:,
+                                               runner_up: "dog", runner_up_score: 0.1)
     @error = error
     @calls = 0
   end

@@ -1,0 +1,26 @@
+Hi ranger,
+
+Bear Watch (<%= @site %>) has reached its Cloudflare R2 free-tier cap, so new
+photo uploads are paused. Bear watchers now see:
+
+  "Oops! Ran out of honey. A ranger needs to fix this."
+
+What triggered it: <%= @trigger %>
+
+Current usage:
+<%= @usage_summary %>
+
+Nothing will be charged: Bear Watch stops before going past the free tier.
+
+To get uploads going again, do one of:
+  - wait for next month (write/read limits reset on the 1st; storage doesn't),
+  - delete old photos, or
+  - raise R2_STORAGE_LIMIT_GB / R2_CLASS_A_LIMIT / R2_CLASS_B_LIMIT in .env
+    (anything over the free tier is billed by Cloudflare) and restart.
+
+Check usage any time with:
+  docker compose exec web bin/rails bearwatch:storage:status
+
+You'll get at most one of these emails per month.
+
+-- Bear Watch

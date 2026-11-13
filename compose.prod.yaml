@@ -35,14 +35,20 @@ services:
       context: ./backend
       target: prod
     env_file: .env
-    environment: &rails-env
-      DATABASE_HOST: db
-      DATABASE_USERNAME: ${MYSQL_USER}
-      DATABASE_PASSWORD: ${MYSQL_PASSWORD}
-      DATABASE_NAME: ${MYSQL_DATABASE}
-      DETECTOR_URL: http://detector:8000
-      UPLOADS_DIR: /rails/storage/uploads
-      MEDIA_DIR: /rails/storage/media
+    environment:
+      <<: &rails-env
+        DATABASE_HOST: db
+        DATABASE_USERNAME: ${MYSQL_USER}
+        DATABASE_PASSWORD: ${MYSQL_PASSWORD}
+        DATABASE_NAME: ${MYSQL_DATABASE}
+        DETECTOR_URL: http://detector:8000
+        UPLOADS_DIR: /rails/storage/uploads
+        MEDIA_DIR: /rails/storage/media
+      # Runs the "online" job queue (R2 uploads, alert email, usage checks)
+      # inside the web server, which has internet access.
+      SOLID_QUEUE_IN_PUMA: "1"
+      SOLID_QUEUE_CONFIG: config/queue_web.yml
+      SOLID_QUEUE_SKIP_RECURRING: "true"
     volumes:
       - uploads:/rails/storage/uploads
       - media:/rails/storage/media
@@ -76,6 +82,7 @@ services:
     build: ./detector
     environment:
       BEAR_CONFIDENCE_THRESHOLD: ${BEAR_CONFIDENCE_THRESHOLD:-0.85}
+      PERSON_MAX_SCORE: ${PERSON_MAX_SCORE:-0.20}
     networks: [internal]
     mem_limit: 1g
     restart: unless-stopped

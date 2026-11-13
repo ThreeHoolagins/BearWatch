@@ -21,7 +21,7 @@ class Post < ApplicationRecord
   end
 
   def image_url
-    PhotoStorage.url_for(image_key) if published? && image_key
+    PhotoStorage.url_for(image_key, storage) if published? && image_key
   end
 
   def as_json(*)

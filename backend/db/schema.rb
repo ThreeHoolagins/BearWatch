@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_12_000002) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_13_000001) do
   create_table "identities", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "provider", limit: 32, null: false
@@ -35,6 +35,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_000002) do
     t.string "failure_reason", limit: 32
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "storage", limit: 8, default: "local", null: false
+    t.integer "image_bytes"
     t.index ["image_key"], name: "index_posts_on_image_key", unique: true
     t.index ["status", "created_at"], name: "index_posts_on_status_and_created_at"
     t.index ["user_id", "created_at"], name: "index_posts_on_user_id_and_created_at"
@@ -189,6 +191,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_000002) do
     t.index ["expires_at"], name: "index_solid_queue_semaphores_on_expires_at"
     t.index ["key", "value"], name: "index_solid_queue_semaphores_on_key_and_value"
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
+  end
+
+  create_table "storage_months", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.date "month", null: false
+    t.bigint "class_a_ops", default: 0, null: false
+    t.bigint "class_b_ops"
+    t.bigint "observed_bytes"
+    t.datetime "observed_at"
+    t.datetime "alerted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["month"], name: "index_storage_months_on_month", unique: true
   end
 
   create_table "users", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|

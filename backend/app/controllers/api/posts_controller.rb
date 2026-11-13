@@ -16,6 +16,11 @@ module Api
       longitude = Float(params[:longitude], exception: false)
       return render_error("Pick where you saw this bear.", :unprocessable_entity) unless latitude && longitude
 
+      if StorageQuota.exhausted?
+        StorageAlert.out_of_honey!("#{current_user.nickname} tried to upload a photo")
+        return render json: { error: "out_of_honey", message: StorageQuota::OUT_OF_HONEY }, status: :service_unavailable
+      end
+
       if (wait = seconds_until_next_upload)
         return render json: { error: "slow_down", message: slow_down_message(wait), retry_after: wait }, status: :too_many_requests
       end

@@ -3,6 +3,10 @@
 COCO already has a "bear" class, so no custom training is needed. A photo
 counts as a bear when the bear score clears the threshold AND beats every
 other animal, so a very bear-like dog that scores "86% dog, 85% bear" fails.
+
+The same pass also scores people (no extra compute). The Terms of Service ban
+people in photos, so person_detected flags anything at or above
+person_threshold.
 """
 import io
 import time
@@ -33,6 +37,7 @@ LOOKALIKES = [COCO.index(name) for name in
 class Result:
     is_bear: bool
     bear_score: float
+    person_detected: bool
     person_score: float
     runner_up: str
     runner_up_score: float
@@ -42,6 +47,7 @@ class Result:
         return {
             "is_bear": self.is_bear,
             "bear_score": round(self.bear_score, 4),
+            "person_detected": self.person_detected,
             "person_score": round(self.person_score, 4),
             "runner_up": self.runner_up,
             "runner_up_score": round(self.runner_up_score, 4),
@@ -50,7 +56,7 @@ class Result:
 
 
 class BearDetector:
-    def __init__(self, model_path: str, threshold: float):
+    def __init__(self, model_path: str, threshold: float, person_threshold: float = 0.20):
         options = ort.SessionOptions()
         # Keep CPU use modest so a Raspberry Pi stays responsive.
         options.intra_op_num_threads = 2
@@ -58,6 +64,7 @@ class BearDetector:
         self.input_name = self.session.get_inputs()[0].name
         self.size = self.session.get_inputs()[0].shape[2]
         self.threshold = threshold
+        self.person_threshold = person_threshold
         self.grids, self.strides = self._grids(self.size)
 
     def detect(self, image_bytes: bytes) -> Result:
@@ -67,12 +74,14 @@ class BearDetector:
         scores = self._class_scores(raw)
 
         bear = float(scores[BEAR])
+        person = float(scores[PERSON])
         runner_up = max(LOOKALIKES, key=lambda i: scores[i])
         runner_up_score = float(scores[runner_up])
         return Result(
             is_bear=bear >= self.threshold and bear > runner_up_score,
             bear_score=bear,
-            person_score=float(scores[PERSON]),
+            person_detected=person >= self.person_threshold,
+            person_score=person,
             runner_up=COCO[runner_up],
             runner_up_score=runner_up_score,
             ms=round((time.perf_counter() - started) * 1000),

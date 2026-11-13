@@ -8,7 +8,9 @@ require "open3"
 #      to sRGB, fit within MAX_EDGE, save as WebP with all metadata stripped
 #      (EXIF GPS, camera details, etc).
 #   3. Ask the detector about the re-encoded image (never the original).
-#   4. Publish (move into media) or reject, and always delete the original.
+#      Reject if a person is visible (Terms of Service) or there's no bear.
+#   4. Publish (local disk, or hand off to StorePhotoJob for R2) or reject,
+#      and always delete the original.
 class PhotoProcessor
   MAX_PIXELS = 50_000_000
   MAX_EDGE = 2048
@@ -34,11 +36,10 @@ class PhotoProcessor
     verdict = @detector.detect(File.binread(output))
     @post.bear_score = verdict.bear_score
 
-    if verdict.is_bear
-      key = PhotoStorage.new_key
-      FileUtils.mv(output, PhotoStorage.media_path(key))
-      @post.update!(status: "published", image_key: key, width: out_width, height: out_height, failure_reason: nil)
-      delete_original
+    if verdict.person_detected
+      finish(:rejected, "person")
+    elsif verdict.is_bear
+      publish(output, out_width, out_height)
     else
       finish(:rejected, "no_bear")
     end
@@ -50,6 +51,21 @@ class PhotoProcessor
   end
 
   private
+    # Local storage publishes right away. With R2 the web process uploads it
+    # (this worker has no internet) and publishes once it's stored.
+    def publish(output, width, height)
+      key = PhotoStorage.new_key
+      FileUtils.mv(output, PhotoStorage.media_path(key))
+      attributes = { image_key: key, width:, height:, image_bytes: PhotoStorage.media_path(key).size, failure_reason: nil }
+      if PhotoStorage.r2?
+        @post.update!(attributes)
+        StorePhotoJob.perform_later(@post.id)
+      else
+        @post.update!(attributes.merge(status: "published"))
+      end
+      delete_original
+    end
+
     def finish(status, reason)
       @post.update!(status:, failure_reason: reason)
       delete_original
