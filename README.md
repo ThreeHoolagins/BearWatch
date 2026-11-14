@@ -29,8 +29,8 @@ docker compose exec web bin/rails bearwatch:seed:reset      # remove the seed be
 
 25 pop-culture bears (paddington, winnie_the_pooh, yogi_bear, smokey_bear, lotso...) with ~90 posts across
 parks near and far from Fort Collins, follows, bear-face avatars, Fat Bear Week wins for 2023-2025, and one banned
-bear (lotso). Photos are drawn landscapes with bear silhouettes, generated locally and kept on local disk even
-when R2 is on. Sign in as any of them with **Developer sign-in** and their nickname as the name. `smokey_bear` is
+bear (lotso). Photos are 32 real bear photos (public domain or CC0, mostly NPS and USFWS) from
+`backend/db/seeds/photos` (credits in `photos.yml`), copied to local disk even when R2 is on. Sign in as any of them with **Developer sign-in** and their nickname as the name. `smokey_bear` is
 an admin. Your own accounts and champion card are never touched.
 
 ### Turning on Google and GitHub sign-in

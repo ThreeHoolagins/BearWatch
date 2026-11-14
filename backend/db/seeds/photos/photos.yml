@@ -1,0 +1,451 @@
+# Development seed photos (see seed_photos.rb). All public domain or CC0, from Wikimedia Commons.
+# bear_score and bear_box come from running each file through the detector.
+---
+- file: brown-a-brown-bear-runs-across-tundra.webp
+  kind: brown
+  width: 1024
+  height: 684
+  bear_score: 0.954
+  bear_box:
+  - 0.6011
+  - 0.4954
+  - 0.583
+  - 0.6082
+  title: A brown bear runs across tundra, Katmai Preserve NPS Photo Russ Taylor (43522006025).jpg
+  source: https://commons.wikimedia.org/wiki/File:A_brown_bear_runs_across_tundra,_Katmai_Preserve_NPS_Photo_Russ_Taylor_(43522006025).jpg
+  author: Katmai National Park and Preserve
+  license: Public domain
+- file: brown-a-brown-bear-walks-in-a-heavy-rain.webp
+  kind: brown
+  width: 1024
+  height: 684
+  bear_score: 0.962
+  bear_box:
+  - 0.6297
+  - 0.7122
+  - 0.3056
+  - 0.2738
+  title: A brown bear walks in a heavy rain NPS Photo Russ Taylor (44381240092).jpg
+  source: https://commons.wikimedia.org/wiki/File:A_brown_bear_walks_in_a_heavy_rain_NPS_Photo_Russ_Taylor_(44381240092).jpg
+  author: Katmai National Park and Preserve
+  license: Public domain
+- file: brown-brown-bear-on-sea-rocks.webp
+  kind: brown
+  width: 1024
+  height: 685
+  bear_score: 0.925
+  bear_box:
+  - 0.5472
+  - 0.5631
+  - 0.2955
+  - 0.5977
+  title: Brown Bear On Sea Rocks.jpg
+  source: https://commons.wikimedia.org/wiki/File:Brown_Bear_On_Sea_Rocks.jpg
+  author: NOAA Photo Library
+  license: Public domain
+- file: brown-grizzly-bear-on-swan-lake-flat.webp
+  kind: brown
+  width: 1024
+  height: 806
+  bear_score: 0.974
+  bear_box:
+  - 0.4704
+  - 0.5763
+  - 0.5227
+  - 0.676
+  title: Grizzly Bear on Swan Lake Flat - Flickr - YellowstoneNPS.jpg
+  source: https://commons.wikimedia.org/wiki/File:Grizzly_Bear_on_Swan_Lake_Flat_-_Flickr_-_YellowstoneNPS.jpg
+  author: Yellowstone National Park
+  license: Public domain
+- file: brown-grizzly-bear-2584.webp
+  kind: brown
+  width: 1024
+  height: 642
+  bear_score: 0.934
+  bear_box:
+  - 0.5767
+  - 0.5349
+  - 0.3179
+  - 0.3054
+  title: Grizzly bear (15055972584).jpg
+  source: https://commons.wikimedia.org/wiki/File:Grizzly_bear_(15055972584).jpg
+  author: Yellowstone National Park from Yellowstone NP, USA
+  license: Public domain
+- file: brown-grizzly-bear-1238.webp
+  kind: brown
+  width: 1024
+  height: 674
+  bear_score: 0.942
+  bear_box:
+  - 0.6722
+  - 0.5576
+  - 0.1784
+  - 0.3991
+  title: Grizzly bear (15490501238).jpg
+  source: https://commons.wikimedia.org/wiki/File:Grizzly_bear_(15490501238).jpg
+  author: Yellowstone National Park from Yellowstone NP, USA
+  license: Public domain
+- file: brown-grizzly-bear-9383.webp
+  kind: brown
+  width: 1024
+  height: 683
+  bear_score: 0.958
+  bear_box:
+  - 0.474
+  - 0.5274
+  - 0.329
+  - 0.5846
+  title: Grizzly bear (32359219383).jpg
+  source: https://commons.wikimedia.org/wiki/File:Grizzly_bear_(32359219383).jpg
+  author: Yellowstone National Park
+  license: Public domain
+- file: brown-grizzly-bear-6353.webp
+  kind: brown
+  width: 1024
+  height: 659
+  bear_score: 0.96
+  bear_box:
+  - 0.6632
+  - 0.6399
+  - 0.3668
+  - 0.558
+  title: Grizzly bear (50320746353).jpg
+  source: https://commons.wikimedia.org/wiki/File:Grizzly_bear_(50320746353).jpg
+  author: YellowstoneNPS
+  license: Public domain
+- file: brown-grizzly-bear-2570.webp
+  kind: brown
+  width: 1024
+  height: 638
+  bear_score: 0.942
+  bear_box:
+  - 0.3758
+  - 0.6456
+  - 0.3871
+  - 0.4285
+  title: Grizzly bear (8703042570).jpg
+  source: https://commons.wikimedia.org/wiki/File:Grizzly_bear_(8703042570).jpg
+  author: Yellowstone National Park from Yellowstone NP, USA
+  license: Public domain
+- file: brown-grizzly-bear-in-hayden-valley-5064.webp
+  kind: brown
+  width: 1024
+  height: 644
+  bear_score: 0.961
+  bear_box:
+  - 0.3547
+  - 0.4608
+  - 0.4633
+  - 0.4597
+  title: Grizzly bear in Hayden Valley (32060795064).jpg
+  source: https://commons.wikimedia.org/wiki/File:Grizzly_bear_in_Hayden_Valley_(32060795064).jpg
+  author: Yellowstone National Park
+  license: Public domain
+- file: brown-grizzly-bear-walks-along-yellowstone-lake-with-a-cutthroat-t.webp
+  kind: brown
+  width: 1024
+  height: 683
+  bear_score: 0.878
+  bear_box:
+  - 0.3969
+  - 0.3834
+  - 0.4672
+  - 0.2806
+  title: Grizzly bear walks along Yellowstone Lake with a cutthroat trout (49106107027).jpg
+  source: https://commons.wikimedia.org/wiki/File:Grizzly_bear_walks_along_Yellowstone_Lake_with_a_cutthroat_trout_(49106107027).jpg
+  author: Yellowstone National Park
+  license: Public domain
+- file: brown-two-subadult-brown-bears-looking-for-salmon.webp
+  kind: brown
+  width: 1024
+  height: 684
+  bear_score: 0.957
+  bear_box:
+  - 0.648
+  - 0.2599
+  - 0.1654
+  - 0.2579
+  title: Two subadult brown bears looking for salmon NPS Photo Russ Taylor (31163281548).jpg
+  source: https://commons.wikimedia.org/wiki/File:Two_subadult_brown_bears_looking_for_salmon_NPS_Photo_Russ_Taylor_(31163281548).jpg
+  author: Katmai National Park and Preserve
+  license: Public domain
+- file: brown-bear-480-otis.webp
+  kind: brown
+  width: 1024
+  height: 680
+  bear_score: 0.958
+  bear_box:
+  - 0.5698
+  - 0.431
+  - 0.6174
+  - 0.5386
+  title: Bear 480 Otis Photo courtesy A. Garduno (43084469342).jpg
+  source: https://commons.wikimedia.org/wiki/File:Bear_480_Otis_Photo_courtesy_A._Garduno_(43084469342).jpg
+  author: Katmai National Park and Preserve
+  license: Public domain
+- file: black-american-black-bear-cub-6474.webp
+  kind: black
+  width: 1024
+  height: 678
+  bear_score: 0.98
+  bear_box:
+  - 0.4499
+  - 0.508
+  - 0.474
+  - 0.8737
+  title: American Black Bear Cub (20254986474).jpg
+  source: https://commons.wikimedia.org/wiki/File:American_Black_Bear_Cub_(20254986474).jpg
+  author: U.S. Fish and Wildlife Service - Midwest Region
+  license: Public domain
+- file: black-black-bear-3374.webp
+  kind: black
+  width: 1024
+  height: 683
+  bear_score: 0.858
+  bear_box:
+  - 0.4397
+  - 0.5129
+  - 0.2678
+  - 0.284
+  title: Black Bear (20083883374).jpg
+  source: https://commons.wikimedia.org/wiki/File:Black_Bear_(20083883374).jpg
+  author: U.S. Fish and Wildlife Service - Midwest Region
+  license: Public domain
+- file: black-black-bear-3248.webp
+  kind: black
+  width: 1024
+  height: 683
+  bear_score: 0.894
+  bear_box:
+  - 0.711
+  - 0.5902
+  - 0.5731
+  - 0.7995
+  title: Black Bear (20518473248).jpg
+  source: https://commons.wikimedia.org/wiki/File:Black_Bear_(20518473248).jpg
+  author: U.S. Fish and Wildlife Service - Midwest Region
+  license: Public domain
+- file: black-black-bear-6912.webp
+  kind: black
+  width: 1024
+  height: 684
+  bear_score: 0.955
+  bear_box:
+  - 0.5419
+  - 0.4939
+  - 0.4506
+  - 0.8525
+  title: Black Bear (48575736912).jpg
+  source: https://commons.wikimedia.org/wiki/File:Black_Bear_(48575736912).jpg
+  author: U.S. Fish and Wildlife Service - Midwest Region
+  license: Public domain
+- file: black-black-bear-cub-4881.webp
+  kind: black
+  width: 1024
+  height: 684
+  bear_score: 0.961
+  bear_box:
+  - 0.387
+  - 0.494
+  - 0.6789
+  - 0.7776
+  title: Black Bear Cub (48575584881).jpg
+  source: https://commons.wikimedia.org/wiki/File:Black_Bear_Cub_(48575584881).jpg
+  author: U.S. Fish and Wildlife Service - Midwest Region
+  license: Public domain
+- file: black-black-bear-family-4064.webp
+  kind: black
+  width: 1024
+  height: 683
+  bear_score: 0.924
+  bear_box:
+  - 0.5936
+  - 0.2808
+  - 0.2923
+  - 0.4744
+  title: Black Bear Family (20083894064).jpg
+  source: https://commons.wikimedia.org/wiki/File:Black_Bear_Family_(20083894064).jpg
+  author: U.S. Fish and Wildlife Service - Midwest Region
+  license: Public domain
+- file: black-black-bear-moosehorn.webp
+  kind: black
+  width: 1024
+  height: 768
+  bear_score: 0.93
+  bear_box:
+  - 0.299
+  - 0.4925
+  - 0.2073
+  - 0.5554
+  title: Black Bear Moosehorn National Wildlife Refuge (51497306948).jpg
+  source: https://commons.wikimedia.org/wiki/File:Black_Bear_Moosehorn_National_Wildlife_Refuge_(51497306948).jpg
+  author: U. S. Fish and Wildlife Service - Northeast Region
+  license: Public domain
+- file: black-black-bear-on-the-dempster-highway.webp
+  kind: black
+  width: 1024
+  height: 683
+  bear_score: 0.954
+  bear_box:
+  - 0.4605
+  - 0.6392
+  - 0.6284
+  - 0.6666
+  title: Black Bear on the Dempster Highway.jpg
+  source: https://commons.wikimedia.org/wiki/File:Black_Bear_on_the_Dempster_Highway.jpg
+  author: Naturedata
+  license: CC0
+- file: black-black-bear-july-2012.webp
+  kind: black
+  width: 1024
+  height: 683
+  bear_score: 0.916
+  bear_box:
+  - 0.6052
+  - 0.3822
+  - 0.7463
+  - 0.5464
+  title: Black bear, July 2012--Warren Bielenberg (25284829317).jpg
+  source: https://commons.wikimedia.org/wiki/File:Black_bear,_July_2012--Warren_Bielenberg_(25284829317).jpg
+  author: Great Smoky Mountains National Park from Gatlinburg, TN
+  license: Public domain
+- file: black-black-bear-may-2015.webp
+  kind: black
+  width: 1024
+  height: 683
+  bear_score: 0.945
+  bear_box:
+  - 0.5988
+  - 0.4512
+  - 0.4348
+  - 0.6486
+  title: Black bear, May 2015--Warren Bielenberg (40156718781).jpg
+  source: https://commons.wikimedia.org/wiki/File:Black_bear,_May_2015--Warren_Bielenberg_(40156718781).jpg
+  author: Great Smoky Mountains National Park from Gatlinburg, TN
+  license: Public domain
+- file: black-black-bear-2372.webp
+  kind: black
+  width: 1024
+  height: 683
+  bear_score: 0.955
+  bear_box:
+  - 0.6024
+  - 0.6161
+  - 0.4076
+  - 0.6265
+  title: Black bear (53756442372).jpg
+  source: https://commons.wikimedia.org/wiki/File:Black_bear_(53756442372).jpg
+  author: U.S. Fish and Wildlife Service - Midwest Region
+  license: Public domain
+- file: black-female-american-black-bear-on-snead-farm-loop-trail-shenando.webp
+  kind: black
+  width: 1024
+  height: 681
+  bear_score: 0.93
+  bear_box:
+  - 0.4578
+  - 0.5414
+  - 0.257
+  - 0.3531
+  title: Female American black bear on Snead Farm Loop Trail, Shenandoah National Park, 2007.jpg
+  source: https://commons.wikimedia.org/wiki/File:Female_American_black_bear_on_Snead_Farm_Loop_Trail,_Shenandoah_National_Park,_2007.jpg
+  author: DimiTalen
+  license: CC0
+- file: black-resting-black-bear-3683.webp
+  kind: black
+  width: 1024
+  height: 575
+  bear_score: 0.937
+  bear_box:
+  - 0.668
+  - 0.4421
+  - 0.4337
+  - 0.6253
+  title: Resting Black Bear (20085473683).jpg
+  source: https://commons.wikimedia.org/wiki/File:Resting_Black_Bear_(20085473683).jpg
+  author: U.S. Fish and Wildlife Service - Midwest Region
+  license: Public domain
+- file: polar-male-polar-bear-on-pack-ice-0832.webp
+  kind: polar
+  width: 1024
+  height: 768
+  bear_score: 0.928
+  bear_box:
+  - 0.3735
+  - 0.4756
+  - 0.3017
+  - 0.2196
+  title: Male Polar Bear on Pack Ice (5165200832).jpg
+  source: https://commons.wikimedia.org/wiki/File:Male_Polar_Bear_on_Pack_Ice_(5165200832).jpg
+  author: USFWSAlaska
+  license: Public domain
+- file: polar-polar-bears-4837.webp
+  kind: polar
+  width: 1024
+  height: 686
+  bear_score: 0.951
+  bear_box:
+  - 0.1611
+  - 0.6323
+  - 0.2882
+  - 0.2358
+  title: Polar Bears (6383864837).jpg
+  source: https://commons.wikimedia.org/wiki/File:Polar_Bears_(6383864837).jpg
+  author: U.S. Fish and Wildlife Service Headquarters
+  license: Public domain
+- file: polar-polar-bear-on-shore-0706.webp
+  kind: polar
+  width: 1024
+  height: 683
+  bear_score: 0.961
+  bear_box:
+  - 0.4794
+  - 0.5836
+  - 0.4088
+  - 0.6627
+  title: Polar bear on shore (52790650706).jpg
+  source: https://commons.wikimedia.org/wiki/File:Polar_bear_on_shore_(52790650706).jpg
+  author: USFWSAlaska
+  license: Public domain
+- file: polar-polar-bear-pair-3253.webp
+  kind: polar
+  width: 1024
+  height: 683
+  bear_score: 0.967
+  bear_box:
+  - 0.2621
+  - 0.5391
+  - 0.3763
+  - 0.5334
+  title: Polar bear pair (6862203253).jpg
+  source: https://commons.wikimedia.org/wiki/File:Polar_bear_pair_(6862203253).jpg
+  author: U.S. Fish and Wildlife Service Headquarters
+  license: Public domain
+- file: polar-two-polar-bears-3427.webp
+  kind: polar
+  width: 1024
+  height: 683
+  bear_score: 0.935
+  bear_box:
+  - 0.7401
+  - 0.7083
+  - 0.1223
+  - 0.1296
+  title: Two polar bears (52790093427).jpg
+  source: https://commons.wikimedia.org/wiki/File:Two_polar_bears_(52790093427).jpg
+  author: USFWSAlaska
+  license: Public domain
+- file: panda-giant-panda-2004-03-2.webp
+  kind: panda
+  width: 1024
+  height: 682
+  bear_score: 0.95
+  bear_box:
+  - 0.509
+  - 0.491
+  - 0.6295
+  - 0.8252
+  title: Giant Panda 2004-03-2.jpg
+  source: https://commons.wikimedia.org/wiki/File:Giant_Panda_2004-03-2.jpg
+  author: Jeff Kubina
+  license: Public domain

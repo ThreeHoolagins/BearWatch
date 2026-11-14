@@ -1,22 +1,22 @@
-require_relative "bear_scenes"
+require_relative "seed_photos"
 
 module DevelopmentSeeds
-  # name, latitude, longitude, scene palette
+  # name, latitude, longitude, kinds of bear you might see there
   PLACES = {
-    katmai: [ "Katmai National Park, AK", 58.5, -155.0, :river ],
-    denali: [ "Denali National Park, AK", 63.3, -150.5, :snow ],
-    yellowstone: [ "Yellowstone National Park, WY", 44.6, -110.5, :meadow ],
-    teton: [ "Grand Teton National Park, WY", 43.8, -110.7, :golden ],
-    rmnp: [ "Rocky Mountain National Park, CO", 40.3, -105.7, :forest ],
-    estes: [ "Estes Park, CO", 40.4, -105.5, :meadow ],
-    fort_collins: [ "Fort Collins, CO", 40.6, -105.1, :golden ],
-    steamboat: [ "Steamboat Springs, CO", 40.5, -106.8, :snow ],
-    durango: [ "Durango, CO", 37.3, -107.9, :dusk ],
-    glacier: [ "Glacier National Park, MT", 48.7, -113.8, :forest ],
-    smokies: [ "Great Smoky Mountains National Park, TN", 35.6, -83.5, :forest ],
-    yosemite: [ "Yosemite National Park, CA", 37.9, -119.5, :dusk ],
-    banff: [ "Banff, Alberta, Canada", 51.2, -115.6, :snow ],
-    london: [ "London, England, United Kingdom", 51.5, -0.1, :river ]
+    katmai: [ "Katmai National Park, AK", 58.5, -155.0, %w[brown] ],
+    denali: [ "Denali National Park, AK", 63.3, -150.5, %w[brown] ],
+    yellowstone: [ "Yellowstone National Park, WY", 44.6, -110.5, %w[brown black] ],
+    teton: [ "Grand Teton National Park, WY", 43.8, -110.7, %w[brown black] ],
+    rmnp: [ "Rocky Mountain National Park, CO", 40.3, -105.7, %w[black] ],
+    estes: [ "Estes Park, CO", 40.4, -105.5, %w[black] ],
+    fort_collins: [ "Fort Collins, CO", 40.6, -105.1, %w[black] ],
+    steamboat: [ "Steamboat Springs, CO", 40.5, -106.8, %w[black] ],
+    durango: [ "Durango, CO", 37.3, -107.9, %w[black] ],
+    glacier: [ "Glacier National Park, MT", 48.7, -113.8, %w[brown black] ],
+    smokies: [ "Great Smoky Mountains National Park, TN", 35.6, -83.5, %w[black] ],
+    yosemite: [ "Yosemite National Park, CA", 37.9, -119.5, %w[black] ],
+    banff: [ "Banff, Alberta, Canada", 51.2, -115.6, %w[brown black] ],
+    london: [ "London, England, United Kingdom", 51.5, -0.1, %w[brown black] ]
   }.freeze
 
   # Within 500 miles of Fort Collins: rmnp, estes, fort_collins, steamboat,
@@ -25,6 +25,7 @@ module DevelopmentSeeds
   #
   # paddington has >30 posts (profile "Show more") and enough near Fort
   # Collins to need a second page on Global. ted has none (empty profile).
+  # kind: overrides the place's kinds of bear (polar bears in Banff, sure).
   CAST = [
     { nick: "smokey_bear", places: %i[rmnp fort_collins], posts: 4, avatar: true, ranger: true },
     { nick: "paddington", places: %i[rmnp estes fort_collins steamboat london], posts: 34, avatar: true },
@@ -39,13 +40,13 @@ module DevelopmentSeeds
     { nick: "tenderheart_bear", places: %i[estes], posts: 2, avatar: true },
     { nick: "kenai", places: %i[katmai denali], posts: 4, avatar: true },
     { nick: "koda", places: %i[katmai], posts: 3 },
-    { nick: "po_the_panda", places: %i[yosemite], posts: 2 },
+    { nick: "po_the_panda", places: %i[yosemite], posts: 2, kind: "panda" },
     { nick: "grizz", places: %i[yosemite teton], posts: 3, avatar: true },
-    { nick: "panda", places: %i[yosemite], posts: 1 },
-    { nick: "ice_bear", places: %i[denali banff], posts: 3 },
+    { nick: "panda", places: %i[yosemite], posts: 1, kind: "panda" },
+    { nick: "ice_bear", places: %i[denali banff], posts: 3, kind: "polar" },
     { nick: "gentle_ben", places: %i[smokies], posts: 2 },
     { nick: "rupert_bear", places: %i[london], posts: 2 },
-    { nick: "iorek_byrnison", places: %i[banff denali], posts: 2, avatar: true },
+    { nick: "iorek_byrnison", places: %i[banff denali], posts: 2, avatar: true, kind: "polar" },
     { nick: "bungle", places: %i[london], posts: 1 },
     { nick: "pudsey_bear", places: %i[london], posts: 1 },
     { nick: "barney_bear", places: %i[glacier], posts: 2 },
@@ -71,7 +72,9 @@ module DevelopmentSeeds
       user = all.find { _1.nickname == bear[:nick] }
       next unless user && seeded.include?(user)
 
-      posts = Array.new(bear[:posts]) { |i| seed_post(user, PLACES.fetch(bear[:places][i % bear[:places].size]), rng) }
+      posts = Array.new(bear[:posts]) do |i|
+        seed_post(user, PLACES.fetch(bear[:places][i % bear[:places].size]), bear[:kind], rng)
+      end
       count += posts.size
       set_avatar(user, posts.first) if bear[:avatar] && posts.any?
       user.ban!(bear[:banned]) if bear[:banned]
@@ -100,28 +103,27 @@ module DevelopmentSeeds
     [ user, true ]
   end
 
-  def seed_post(user, place, rng)
-    name, lat, lng, palette = place
-    scene = BearScenes.build(rng, palette:)
+  def seed_post(user, place, kind, rng)
+    name, lat, lng, kinds = place
+    photo = SeedPhotos.deal(kind ? [ kind ] : kinds, rng)
     key = PhotoStorage.new_key
     path = PhotoStorage.media_path(key)
-    width, height = BearScenes.render(scene, path)
+    FileUtils.cp(photo.path, path)
     at = rng.rand(0.0..40.0).days.ago
-    bx, by, bw, bh = scene.bear_box
+    bx, by, bw, bh = photo.bear_box
 
     # Seed photos stay on local disk (served at /media) even when R2 is on,
     # so seeding never touches the bucket or the free-tier cap.
     user.posts.create!(
-      status: "published", storage: "local", image_key: key, image_bytes: path.size, width:, height:,
+      status: "published", storage: "local", image_key: key, image_bytes: path.size, width: photo.width, height: photo.height,
       place_name: name, latitude: lat + rng.rand(-0.3..0.3), longitude: lng + rng.rand(-0.3..0.3),
-      bear_score: rng.rand(0.86..0.99).round(3), bear_x: bx, bear_y: by, bear_w: bw, bear_h: bh,
+      bear_score: photo.bear_score, bear_x: bx, bear_y: by, bear_w: bw, bear_h: bh,
       created_at: at, updated_at: at
-    ).tap { |post| post.define_singleton_method(:seed_head) { scene.head } }
+    ).tap { |post| post.define_singleton_method(:seed_photo) { photo } }
   end
 
   def set_avatar(user, post)
-    x, y = post.seed_head
-    user.update!(avatar_post: post, avatar_zoom: 2.4, avatar_x: x, avatar_y: y)
+    user.update!(avatar_post: post, **SeedPhotos.avatar_crop(post.seed_photo))
   end
 
   def seed_follows(users, rng)
