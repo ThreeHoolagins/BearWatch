@@ -51,3 +51,15 @@ namespace :bearwatch do
     end
   end
 end
+
+namespace :bearwatch do
+  namespace :seed do
+    desc "Development: remove the seed bears (and their photos), then seed again. Your own accounts are kept."
+    task reset: :environment do
+      abort "Seeds are for development only." unless Rails.env.development? || ENV["ALLOW_SEEDS"] == "1"
+      require Rails.root.join("db/seeds/development")
+      DevelopmentSeeds.remove!
+      Rake::Task["db:seed"].invoke
+    end
+  end
+end

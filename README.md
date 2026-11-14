@@ -19,6 +19,20 @@ Open **http://localhost:5173**. Vite proxies `/api`, `/auth` and `/media` to Rai
 
 Without Google/GitHub credentials you'll see a **Developer sign-in** button (development only). It asks for a name, which becomes a fake account ID, then sends you to the nickname screen like a real new account would.
 
+### Seed data (development)
+
+```sh
+docker compose exec web bin/rails db:seed                   # add the seed bears (safe to re-run)
+docker compose exec web bin/rails db:seed ME=your_nickname  # ...and make your account follow some of them
+docker compose exec web bin/rails bearwatch:seed:reset      # remove the seed bears and seed again
+```
+
+25 pop-culture bears (paddington, winnie_the_pooh, yogi_bear, smokey_bear, lotso...) with ~90 posts across
+parks near and far from Fort Collins, follows, bear-face avatars, Fat Bear Week wins for 2023-2025, and one banned
+bear (lotso). Photos are drawn landscapes with bear silhouettes, generated locally and kept on local disk even
+when R2 is on. Sign in as any of them with **Developer sign-in** and their nickname as the name. `smokey_bear` is
+an admin. Your own accounts and champion card are never touched.
+
 ### Turning on Google and GitHub sign-in
 
 Fill in the `GOOGLE_*` / `GITHUB_*` values in `.env` (see the comments there for where to create the OAuth apps and which redirect URLs to register), then `docker compose restart web`.
