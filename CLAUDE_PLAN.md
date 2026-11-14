@@ -38,6 +38,7 @@ This doc records decisions as we make them, open questions, and build phases.
 | D24 | Job queues | `photos` runs in the offline worker; `online` (R2 uploads, email, usage checks) runs inside the web server via the Solid Queue Puma plugin. |
 | D25 | Moderation | Admins can remove a single post (photo deleted from storage) without banning. Outside champion photos are processed in the web request (admins only) with the same re-encode and metadata strip, no bear check. |
 | D26 | Alert email | Sent from a dedicated Gmail account via SMTP (App Password in `.env`) to the owner's address. |
+| D27 | Own-post deletion | Posters can delete their own published/rejected posts (photo removed from storage); not while still processing. |
 | D11 | Bear check | ~~bear-conservation detect step~~ → **Option B**: a permissively licensed COCO detector (e.g. YOLOX, Apache-2.0) run with `onnxruntime` (MIT), using COCO's built-in `bear` class at 85% confidence. Avoids Ultralytics' AGPL terms (bear-conservation is MIT but its model is trained with and runs on Ultralytics). Validate against real photos before committing to it. |
 | D19 | Photo storage | **Cloudflare R2** in production (free tier, no egress fees); local disk in development. Storage is swappable via `STORAGE_BACKEND`. The no-internet worker writes to a shared volume; the web container uploads to R2. Setup steps: `docs/r2-setup.md`. |
 | D20 | Repo visibility | **Private.** Still: keep secrets in `.env` only, run a secret scan before any change of mind. |
@@ -80,7 +81,6 @@ browser ──> Caddy (TLS, serves SPA + /media) ──> Rails API (web)  ──
 - `fat_bear_champions` *(built)*: year (unique), bear_name, bear_number, blurb, post_id **or** image_key/image_storage/size for an outside photo, credit, link_url (http/https only), link_text, updated_by_id
 
 ## Open questions
-- **Q1 Own-post deletion:** The mockup lets users delete their own posts (not in the original plan). Keep?
 - **Q8 Awarding wins:** The mockup awards a win from the post's pop-up (admins only) and lists/revokes them in the admin panel. OK?
 - **Q2 Sightings map (later):** Fine with 10 km rounding as a heatmap/clusters. Avoid exact pins (risk to the bears and to user privacy).
 - **Q3 Place names:** Free-text place name, or pick from a list / geocoder (e.g. OSM Nominatim, free but rate limited)?

@@ -46,6 +46,17 @@ module Api
       render json: { post: }
     end
 
+    # Posters can delete their own bears (the stored photo goes too).
+    # Admins remove other people's posts via Api::Admin::PostsController.
+    def destroy
+      post = current_user.posts.find_by(id: params[:id])
+      return head :not_found unless post
+      return render json: { error: "processing", message: "Wait until we've finished checking this photo." }, status: :conflict if post.processing?
+
+      post.destroy!
+      head :no_content
+    end
+
     private
       def render_error(message, status)
         render json: { error: "invalid", message: }, status:

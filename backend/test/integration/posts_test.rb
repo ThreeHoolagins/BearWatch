@@ -81,6 +81,20 @@ class PostsTest < ActionDispatch::IntegrationTest
     ENV.delete("ALERT_EMAIL")
   end
 
+  test "posters can delete their own bears, but not anyone else's" do
+    mine = @user.posts.create!(place_name: "Estes Park, CO", latitude: 40.4, longitude: -105.5, status: "published", image_key: "mine")
+    theirs = User.create!(nickname: "otis_superfan").posts.create!(place_name: "Estes Park, CO", latitude: 40.4,
+                                                                    longitude: -105.5, status: "published", image_key: "theirs")
+
+    assert_enqueued_with(job: DeletePhotoJob, args: [ "mine", "local" ]) { api :delete, "/api/posts/#{mine.id}" }
+    assert_response :no_content
+    assert_not Post.exists?(mine.id)
+
+    api :delete, "/api/posts/#{theirs.id}"
+    assert_response :not_found
+    assert Post.exists?(theirs.id)
+  end
+
   test "banned and signed-out users can't upload" do
     @user.ban!("Testing")
     upload

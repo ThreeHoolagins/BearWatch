@@ -10,7 +10,7 @@ Rails.application.routes.draw do
     resource :signup, only: :create
     get "nicknames/check", to: "nicknames#check"
 
-    resources :posts, only: %i[create show]
+    resources :posts, only: %i[create show destroy]
     get "feed/global", to: "feeds#global"
     get "feed/following", to: "feeds#following"
 

@@ -13,6 +13,11 @@ export function PostModal({ post: initial, onClose, onChanged }: { post: Post; o
   const { session } = useSession()
   const [post, setPost] = useState(initial)
   const isAdmin = session?.user?.is_admin ?? false
+  const isMine = post.user.nickname === session?.user?.nickname
+  const removed = () => {
+    onChanged?.()
+    onClose()
+  }
 
   return (
     <Modal
@@ -20,7 +25,13 @@ export function PostModal({ post: initial, onClose, onChanged }: { post: Post; o
       onClose={onClose}
       size="sm"
       className="postm"
-      footer={isAdmin ? <RangerTools post={post} onPost={setPost} onRemoved={() => { onChanged?.(); onClose() }} onChanged={onChanged} /> : undefined}
+      footer={
+        isAdmin ? (
+          <RangerTools post={post} onPost={setPost} onRemoved={removed} onChanged={onChanged} />
+        ) : isMine ? (
+          <OwnerTools post={post} onRemoved={removed} />
+        ) : undefined
+      }
     >
       <Link className="who" to={profilePath(post.user, session?.user?.nickname)} onClick={onClose}>
         <Avatar avatar={post.user.avatar} />
@@ -34,6 +45,36 @@ export function PostModal({ post: initial, onClose, onChanged }: { post: Post; o
         {post.fat_bear_win && <span className="winbadge inline"><TrophyIcon />Fat Bear Week {post.fat_bear_win.year} winner</span>}
       </div>
     </Modal>
+  )
+}
+
+// Your own post: delete it (asks once to confirm).
+function OwnerTools({ post, onRemoved }: { post: Post; onRemoved: () => void }) {
+  const [confirming, setConfirming] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [problem, setProblem] = useState<string | null>(null)
+
+  const remove = async () => {
+    setBusy(true)
+    setProblem(null)
+    try {
+      await api(`/api/posts/${post.id}`, { method: 'DELETE' })
+      onRemoved()
+    } catch (error) {
+      setProblem(errorMessage(error, "Couldn't delete that. Try again."))
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="ranger-tools">
+      {confirming && <span className="confirm">Delete this bear for good?</span>}
+      {confirming && <button className="btn ghost sm" onClick={() => setConfirming(false)} disabled={busy}>Keep it</button>}
+      <button className="btn ghost danger sm" onClick={() => (confirming ? void remove() : setConfirming(true))} disabled={busy}>
+        {confirming ? 'Delete' : 'Delete post'}
+      </button>
+      {problem && <p className="msg bad">{problem}</p>}
+    </div>
   )
 }
 

@@ -558,3 +558,5 @@ button.drop .btn { margin-top: 14px; }
 @media (min-width: 1150px) {
   .withrail .champ-mob { display: none; }
 }
+
+.ranger-tools .confirm { font-size: 13px; font-weight: 600; }
