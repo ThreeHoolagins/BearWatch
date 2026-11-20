@@ -10,7 +10,9 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists/*
 # VIPS_BLOCK_UNTRUSTED refuses libvips loaders that aren't hardened for
 # untrusted input; VIPS_CONCURRENCY keeps libvips from using every core.
-ENV BUNDLE_PATH=/usr/local/bundle VIPS_BLOCK_UNTRUSTED=1 VIPS_CONCURRENCY=2
+# MALLOC_ARENA_MAX=2 stops glibc from giving every thread its own memory
+# arena, which keeps Ruby processes much smaller for a little speed.
+ENV BUNDLE_PATH=/usr/local/bundle VIPS_BLOCK_UNTRUSTED=1 VIPS_CONCURRENCY=2 MALLOC_ARENA_MAX=2
 
 FROM base AS buildtools
 RUN apt-get update -qq && \

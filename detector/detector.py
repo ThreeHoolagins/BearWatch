@@ -8,7 +8,10 @@ The same pass also scores people (no extra compute). The Terms of Service ban
 people in photos, so person_detected flags anything at or above
 person_threshold.
 """
+import ctypes
+import gc
 import io
+import threading
 import time
 from dataclasses import dataclass
 
@@ -59,21 +62,50 @@ class Result:
 
 
 class BearDetector:
-    def __init__(self, model_path: str, threshold: float, person_threshold: float = 0.20):
-        options = ort.SessionOptions()
+    def __init__(self, model_path: str, threshold: float, person_threshold: float = 0.20, threads: int = 2):
+        self.model_path = model_path
+        self.options = ort.SessionOptions()
         # Keep CPU use modest so a Raspberry Pi stays responsive.
-        options.intra_op_num_threads = 2
-        self.session = ort.InferenceSession(model_path, options, providers=["CPUExecutionProvider"])
-        self.input_name = self.session.get_inputs()[0].name
-        self.size = self.session.get_inputs()[0].shape[2]
+        self.options.intra_op_num_threads = threads
+        self.options.inter_op_num_threads = 1
+        # No memory arena: a little slower, but memory goes back after each photo
+        # instead of staying reserved for the next one.
+        self.options.enable_cpu_mem_arena = False
+        self.lock = threading.Lock()
+        self.session = None
+        # Load once up front so a broken model fails at startup, not on the first photo.
+        session = self._load()
+        self.input_name = session.get_inputs()[0].name
+        self.size = session.get_inputs()[0].shape[2]
         self.threshold = threshold
         self.person_threshold = person_threshold
         self.grids, self.strides = self._grids(self.size)
 
+    def _load(self):
+        if self.session is None:
+            self.session = ort.InferenceSession(self.model_path, self.options, providers=["CPUExecutionProvider"])
+        return self.session
+
+    def unload(self):
+        """Frees the model (~100 MB); the next detect() loads it again."""
+        with self.lock:
+            self.session = None
+        gc.collect()
+        # glibc keeps freed memory for reuse; ask it to hand it back to the system.
+        try:
+            ctypes.CDLL("libc.so.6").malloc_trim(0)
+        except OSError:
+            pass
+
+    @property
+    def loaded(self) -> bool:
+        return self.session is not None
+
     def detect(self, image_bytes: bytes) -> Result:
         started = time.perf_counter()
         tensor, content_size = self._preprocess(image_bytes)
-        raw = self.session.run(None, {self.input_name: tensor})[0][0]
+        with self.lock:
+            raw = self._load().run(None, {self.input_name: tensor})[0][0]
         scores = self._class_scores(raw)
 
         bear = float(scores[BEAR])

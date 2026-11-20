@@ -1,15 +1,15 @@
 # Jobs that need the internet run inside the web server (Puma plugin):
-# uploading to R2, sending alert emails, checking R2 usage.
+# uploading to R2, sending Discord alerts, checking R2 usage.
 # The offline photo worker uses config/queue.yml instead.
 default: &default
   dispatchers:
-    - polling_interval: 1
+    - polling_interval: <%= ENV.fetch("JOB_DISPATCH_INTERVAL", 1) %>
       batch_size: 100
   workers:
     - queues: [ online ]
       threads: 1
       processes: 1
-      polling_interval: 1
+      polling_interval: <%= ENV.fetch("JOB_POLL_INTERVAL", 1) %>
 
 development:
   <<: *default

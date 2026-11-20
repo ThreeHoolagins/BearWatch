@@ -1,13 +1,15 @@
 default: &default
   dispatchers:
-    - polling_interval: 1
+    # Only moves scheduled jobs (retries) onto the queue, so it can be lazy.
+    - polling_interval: <%= ENV.fetch("JOB_DISPATCH_INTERVAL", 1) %>
       batch_size: 500
   workers:
     - queues: [ photos, default ]
       # One photo at a time keeps a Raspberry Pi responsive.
       threads: <%= ENV.fetch("JOB_THREADS", 1) %>
       processes: <%= ENV.fetch("JOB_CONCURRENCY", 1) %>
-      polling_interval: 1
+      # Seconds between "any new photos?" checks; the most a photo waits to start.
+      polling_interval: <%= ENV.fetch("JOB_POLL_INTERVAL", 1) %>
 
 development:
   <<: *default

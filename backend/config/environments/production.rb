@@ -9,6 +9,10 @@ Rails.application.configure do
   # Eager load code on boot for better performance and memory savings (ignored by Rake tasks).
   config.eager_load = true
 
+  # YJIT makes Ruby faster but costs tens of MB per process. Bear Watch is
+  # small and would rather be slow than hungry, so it's off unless RAILS_YJIT=true.
+  config.yjit = ENV["RAILS_YJIT"] == "true"
+
   # Full error reports are disabled.
   config.consider_all_requests_local = false
 

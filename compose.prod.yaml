@@ -9,8 +9,19 @@
 # Volumes:
 #   uploads - originals waiting for the worker (web writes, worker deletes)
 #   media   - processed WebPs (worker writes, Caddy serves at /media)
+#
+# Tuned to be small rather than fast (fits a 1-2 GB box, see docs/aws-deploy.md):
+# one Puma process, Solid Queue in threads instead of forked processes, lazy
+# job polling, a detector that unloads its model when idle, and a lean MySQL.
 
 name: bearwatch
+
+# Docker never rotates container logs by default; cap each service at ~30 MB.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
 
 services:
   proxy:
@@ -19,6 +30,8 @@ services:
       dockerfile: infra/caddy/Dockerfile
     environment:
       APP_HOST: ${APP_HOST:-localhost}
+      # Allowed image origin in the Content-Security-Policy.
+      R2_PUBLIC_URL: ${R2_PUBLIC_URL:-}
     ports:
       - "80:80"
       - "443:443"
@@ -26,8 +39,11 @@ services:
       - caddy_data:/data
       - media:/srv/media:ro
     depends_on:
-      - web
+      web:
+        condition: service_healthy
     networks: [edge]
+    mem_limit: 128m
+    logging: *logging
     restart: unless-stopped
 
   web:
@@ -44,7 +60,14 @@ services:
         DETECTOR_URL: http://detector:8000
         UPLOADS_DIR: /rails/storage/uploads
         MEDIA_DIR: /rails/storage/media
-      # Runs the "online" job queue (R2 uploads, alert email, usage checks)
+        # Small over fast: Solid Queue runs as threads in one process (no
+        # forked children), and checks for jobs every few seconds.
+        SOLID_QUEUE_SUPERVISOR_MODE: async
+        JOB_POLL_INTERVAL: ${JOB_POLL_INTERVAL:-3}
+        JOB_DISPATCH_INTERVAL: ${JOB_DISPATCH_INTERVAL:-10}
+      # Puma runs a single process; two request threads is plenty.
+      RAILS_MAX_THREADS: ${RAILS_MAX_THREADS:-2}
+      # Runs the "online" job queue (R2 uploads, Discord alerts, usage checks)
       # inside the web server, which has internet access.
       SOLID_QUEUE_IN_PUMA: "1"
       SOLID_QUEUE_CONFIG: config/queue_web.yml
@@ -55,7 +78,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost:3000/up"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      # db:prepare and boot can take a while on a small box.
+      start_period: 120s
     networks: [edge, internal]
+    mem_limit: 512m
+    logging: *logging
     restart: unless-stopped
 
   # Processes uploads: libvips re-encoding, then the bear check. No internet.
@@ -65,7 +97,9 @@ services:
       target: prod
     command: ["bin/jobs"]
     env_file: .env
-    environment: *rails-env
+    environment:
+      <<: *rails-env
+      RAILS_MAX_THREADS: "1"
     volumes:
       - uploads:/rails/storage/uploads
       - media:/rails/storage/media
@@ -75,7 +109,9 @@ services:
       detector:
         condition: service_healthy
     networks: [internal]
+    # A ceiling, not a reservation: room for libvips on a 50 MP photo.
     mem_limit: 768m
+    logging: *logging
     restart: unless-stopped
 
   detector:
@@ -83,8 +119,12 @@ services:
     environment:
       BEAR_CONFIDENCE_THRESHOLD: ${BEAR_CONFIDENCE_THRESHOLD:-0.85}
       PERSON_MAX_SCORE: ${PERSON_MAX_SCORE:-0.20}
+      # One CPU thread, and free the model after 10 idle minutes.
+      DETECTOR_THREADS: ${DETECTOR_THREADS:-1}
+      DETECTOR_IDLE_UNLOAD_SECONDS: ${DETECTOR_IDLE_UNLOAD_SECONDS:-600}
     networks: [internal]
-    mem_limit: 1g
+    mem_limit: 768m
+    logging: *logging
     restart: unless-stopped
 
   db:
@@ -96,9 +136,21 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     command:
       # Keep MySQL small enough for a Raspberry Pi 4 or a free-tier VM.
-      - --innodb-buffer-pool-size=128M
+      # The whole database is a few MB of rows (photos live elsewhere).
+      - --innodb-buffer-pool-size=64M
+      - --innodb-log-buffer-size=4M
+      - --innodb-redo-log-capacity=32M
       - --performance-schema=OFF
-      - --max-connections=50
+      - --max-connections=30
+      - --thread-cache-size=4
+      - --table-open-cache=256
+      - --temptable-max-ram=32M
+      - --tmp-table-size=16M
+      - --max-heap-table-size=16M
+      - --key-buffer-size=8M
+      # No replication here, so no binary log (saves disk and writes).
+      - --skip-log-bin
+      - --skip-name-resolve
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
@@ -107,6 +159,8 @@ services:
       timeout: 5s
       retries: 30
     networks: [internal]
+    mem_limit: 512m
+    logging: *logging
     restart: unless-stopped
 
 networks:

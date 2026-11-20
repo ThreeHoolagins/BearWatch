@@ -3,6 +3,18 @@
 {$APP_HOST:localhost} {
 	encode zstd gzip
 
+	# Security headers for everything Caddy serves (Rails adds its own HSTS too).
+	# Photos load from R2_PUBLIC_URL; the SSO form POST redirects to Google/GitHub,
+	# and browsers check that redirect against form-action.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(self), camera=(), microphone=(), payment=()"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: {$R2_PUBLIC_URL}; font-src 'self'; connect-src 'self'; form-action 'self' https://accounts.google.com https://github.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
+		-Server
+	}
+
 	# Photo uploads: 12 MB photo plus form fields. Everything else stays small.
 	handle /api/posts {
 		request_body {

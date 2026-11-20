@@ -34,7 +34,11 @@ port ENV.fetch("PORT", 3000)
 plugin :tmp_restart
 
 # Run the "online" job queue inside the web server (see config/queue_web.yml).
-plugin :solid_queue if ENV["SOLID_QUEUE_IN_PUMA"]
+if ENV["SOLID_QUEUE_IN_PUMA"]
+  plugin :solid_queue
+  # Threads inside this process instead of forked child processes (saves memory).
+  solid_queue_mode :async if ENV["SOLID_QUEUE_SUPERVISOR_MODE"] == "async"
+end
 
 # Specify the PID file. Defaults to tmp/pids/server.pid in development.
 # In other environments, only set the PID file if requested.
