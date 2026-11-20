@@ -1,7 +1,6 @@
 require "test_helper"
 
 class StorePhotoJobTest < ActiveJob::TestCase
-  include ActionMailer::TestHelper
   include TestImages
 
   class FakeR2
@@ -17,11 +16,11 @@ class StorePhotoJobTest < ActiveJob::TestCase
     FileUtils.cp(make_image("webp"), PhotoStorage.media_path(@key))
     @post = @user.posts.create!(place_name: "Katmai National Park, AK", latitude: 58.5, longitude: -155.1, image_key: @key)
     @r2 = FakeR2.new
-    ENV["ALERT_EMAIL"] = "ranger@example.com"
+    ENV["DISCORD_WEBHOOK_URL"] = "https://discord.com/api/webhooks/1/test"
   end
 
   teardown do
-    ENV.delete("ALERT_EMAIL")
+    ENV.delete("DISCORD_WEBHOOK_URL")
     ENV.delete("R2_STORAGE_LIMIT_GB")
   end
 
@@ -41,9 +40,9 @@ class StorePhotoJobTest < ActiveJob::TestCase
     assert_not PhotoStorage.media_path(@key).exist?
   end
 
-  test "out of honey: doesn't upload, fails the post, emails the ranger" do
+  test "out of honey: doesn't upload, fails the post, alerts the ranger" do
     ENV["R2_STORAGE_LIMIT_GB"] = "0"
-    assert_enqueued_emails(1) { perform }
+    assert_enqueued_jobs(1, only: DiscordAlertJob) { perform }
 
     assert_equal [ "failed", "out_of_storage" ], [ @post.status, @post.failure_reason ]
     assert_empty @r2.puts

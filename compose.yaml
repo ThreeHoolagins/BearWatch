@@ -23,7 +23,7 @@ services:
     env_file: .env
     environment:
       <<: *rails-env
-      # Runs the "online" job queue (R2 uploads, alert email, usage checks)
+      # Runs the "online" job queue (R2 uploads, Discord alerts, usage checks)
       # inside the web server, which has internet access.
       SOLID_QUEUE_IN_PUMA: "1"
       SOLID_QUEUE_CONFIG: config/queue_web.yml

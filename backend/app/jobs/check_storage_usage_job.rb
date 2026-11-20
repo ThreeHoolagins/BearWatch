@@ -3,7 +3,7 @@ require "net/http"
 # Every few hours: measure the bucket's real size (in case anything else
 # writes to it), and, if R2_ANALYTICS_TOKEN can read Cloudflare's analytics,
 # this month's read/write counts. If that pushes usage over the cap, the
-# owner is emailed even before anyone tries to upload.
+# ranger is alerted on Discord even before anyone tries to upload.
 class CheckStorageUsageJob < ApplicationJob
   queue_as :online
 

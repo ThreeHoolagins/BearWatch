@@ -34,7 +34,7 @@ namespace :bearwatch do
       puts StorageQuota.usage.summary
       month = StorageMonth.current
       puts "Last bucket measurement: #{month.observed_at || "never"}"
-      puts "Out-of-honey email this month: #{month.alerted_at || "not sent"}"
+      puts "Out-of-honey Discord alert this month: #{month.alerted_at || "not sent"}"
       puts StorageQuota.exhausted? ? "Uploads: PAUSED (out of honey)" : "Uploads: open"
     end
 
@@ -44,7 +44,7 @@ namespace :bearwatch do
       Rake::Task["bearwatch:storage:status"].invoke
     end
 
-    desc "Allow another out-of-honey email this month"
+    desc "Allow another out-of-honey alert this month"
     task reset_alert: :environment do
       StorageMonth.current.update!(alerted_at: nil)
       puts "Alert reset."

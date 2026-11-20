@@ -1,16 +1,16 @@
 require "test_helper"
 
 class StorageQuotaTest < ActiveSupport::TestCase
-  include ActionMailer::TestHelper
+  include ActiveJob::TestHelper
 
   setup do
     @user = User.create!(nickname: "grizzwald")
-    @env = ENV.to_h.slice("R2_STORAGE_LIMIT_GB", "R2_CLASS_A_LIMIT", "ALERT_EMAIL")
-    ENV["ALERT_EMAIL"] = "ranger@example.com"
+    @env = ENV.to_h.slice("R2_STORAGE_LIMIT_GB", "R2_CLASS_A_LIMIT", "DISCORD_WEBHOOK_URL")
+    ENV["DISCORD_WEBHOOK_URL"] = "https://discord.com/api/webhooks/1/test"
   end
 
   teardown do
-    %w[R2_STORAGE_LIMIT_GB R2_CLASS_A_LIMIT ALERT_EMAIL].each { ENV.delete(_1) }
+    %w[R2_STORAGE_LIMIT_GB R2_CLASS_A_LIMIT DISCORD_WEBHOOK_URL].each { ENV.delete(_1) }
     @env.each { |k, v| ENV[k] = v }
   end
 
@@ -50,28 +50,28 @@ class StorageQuotaTest < ActiveSupport::TestCase
     with_r2 { assert StorageQuota.exhausted?(0) }
   end
 
-  test "emails once per month, no matter how many uploads hit the cap" do
-    assert_enqueued_emails(1) do
+  test "alerts once per month, no matter how many uploads hit the cap" do
+    assert_enqueued_jobs(1, only: DiscordAlertJob) do
       3.times { StorageAlert.out_of_honey!("test") }
     end
     assert StorageMonth.current.alerted_at
 
     StorageMonth.current.update!(month: 1.month.ago.beginning_of_month.to_date) # pretend it was last month
-    assert_enqueued_emails(1) { StorageAlert.out_of_honey!("new month") }
+    assert_enqueued_jobs(1, only: DiscordAlertJob) { StorageAlert.out_of_honey!("new month") }
   end
 
-  test "the alert email explains what happened" do
-    email = AlertMailer.out_of_honey(recipient: "ranger@example.com", trigger: "someone uploaded",
-                                     usage_summary: "Storage: 9.5 GB of 9.5 GB")
-    assert_equal [ "ranger@example.com" ], email.to
-    assert_match "out of honey", email.subject
-    assert_match "Oops! Ran out of honey. A ranger needs to fix this.", email.body.to_s
-    assert_match "Storage: 9.5 GB of 9.5 GB", email.body.to_s
+  test "the alert explains what happened" do
+    message = StorageAlert.message("someone uploaded", "Storage: 9.5 GB of 9.5 GB")
+    assert_match "out of honey", message
+    assert_match "Oops! Ran out of honey. A ranger needs to fix this.", message
+    assert_match "someone uploaded", message
+    assert_match "Storage: 9.5 GB of 9.5 GB", message
+    assert_operator message.length, :<=, DiscordAlertJob::MAX_LENGTH
   end
 
-  test "no email address configured: logs instead of failing" do
-    ENV.delete("ALERT_EMAIL")
-    assert_no_enqueued_emails { StorageAlert.out_of_honey!("test") }
+  test "no Discord webhook configured: logs instead of failing" do
+    ENV.delete("DISCORD_WEBHOOK_URL")
+    assert_no_enqueued_jobs(only: DiscordAlertJob) { StorageAlert.out_of_honey!("test") }
     assert_nil StorageMonth.current.alerted_at
   end
 end

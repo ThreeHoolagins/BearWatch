@@ -1,6 +1,6 @@
 # Keeps Bear Watch inside Cloudflare R2's free tier. Once any limit would be
-# crossed, uploads stop with "Oops! Ran out of honey" and the owner is emailed
-# (once per month, see StorageAlert).
+# crossed, uploads stop with "Oops! Ran out of honey" and the ranger gets a Discord
+# alert (once per month, see StorageAlert).
 #
 # Free tier: 10 GB-month storage, 1M Class A ops (writes/lists), 10M Class B
 # ops (reads) per month. Defaults stop a little short of each, for headroom.

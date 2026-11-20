@@ -18,6 +18,7 @@ module Api
 
       if StorageQuota.exhausted?
         StorageAlert.out_of_honey!("#{current_user.nickname} tried to upload a photo")
+        request.env[ErrorAlerts::ALREADY_ALERTED] = true
         return render json: { error: "out_of_honey", message: StorageQuota::OUT_OF_HONEY }, status: :service_unavailable
       end
 

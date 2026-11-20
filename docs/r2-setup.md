@@ -96,8 +96,8 @@ Bear Watch stops accepting uploads before it would cost you anything:
 | Reads (Class B) | 10,000,000 / month | 9,500,000 | `R2_CLASS_B_LIMIT` |
 
 When a limit is hit, uploaders see *"Oops! Ran out of honey. A ranger needs to
-fix this."* and `ALERT_EMAIL` gets one email per month (needs the `SMTP_*`
-settings).
+fix this."* and the Discord channel behind `DISCORD_WEBHOOK_URL` gets one alert per
+month.
 
 Storage and writes are counted by Bear Watch itself (it's the only thing
 writing to the bucket), and the bucket is measured every 6 hours as a
@@ -108,7 +108,7 @@ Read** and set `R2_ANALYTICS_TOKEN`.
 ```sh
 docker compose exec web bin/rails bearwatch:storage:status       # usage now
 docker compose exec web bin/rails bearwatch:storage:check        # measure the bucket now
-docker compose exec web bin/rails bearwatch:storage:reset_alert  # allow another email this month
+docker compose exec web bin/rails bearwatch:storage:reset_alert  # allow another alert this month
 ```
 
 ## 6. Billing alert

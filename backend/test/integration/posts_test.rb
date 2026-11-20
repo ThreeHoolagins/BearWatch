@@ -3,7 +3,6 @@ require "test_helper"
 class PostsTest < ActionDispatch::IntegrationTest
   include TestImages
   include ActiveJob::TestHelper
-  include ActionMailer::TestHelper
 
   setup do
     @user = User.create!(nickname: "grizzwald")
@@ -63,11 +62,11 @@ class PostsTest < ActionDispatch::IntegrationTest
     assert_response :accepted
   end
 
-  test "out of honey: uploads stop with the ranger message and one email goes out" do
+  test "out of honey: uploads stop with the ranger message and one Discord alert goes out" do
     ENV["R2_STORAGE_LIMIT_GB"] = "0"
-    ENV["ALERT_EMAIL"] = "ranger@example.com"
+    ENV["DISCORD_WEBHOOK_URL"] = "https://discord.com/api/webhooks/1/test"
     stubbing(PhotoStorage, :r2?, true) do
-      assert_enqueued_emails(1) do
+      assert_enqueued_jobs(1, only: DiscordAlertJob) do
         2.times do
           assert_no_enqueued_jobs(only: ProcessPhotoJob) { upload }
           assert_response :service_unavailable
@@ -78,7 +77,7 @@ class PostsTest < ActionDispatch::IntegrationTest
     assert_equal 0, Post.count
   ensure
     ENV.delete("R2_STORAGE_LIMIT_GB")
-    ENV.delete("ALERT_EMAIL")
+    ENV.delete("DISCORD_WEBHOOK_URL")
   end
 
   test "posters can delete their own bears, but not anyone else's" do
