@@ -2,6 +2,9 @@
 # Run from your machine:  AWS_PROFILE=ff15 infra/aws/deploy.sh
 # Tells the instance (via SSM Run Command) to pull main and run host-deploy.sh, then waits.
 set -euo pipefail
+# The AWS CLI on Windows prints with the console code page and chokes on build
+# output like "✓"; force UTF-8.
+export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
 STACK=${STACK:-bearwatch}
 INSTANCE_ID=$(aws cloudformation describe-stacks --stack-name "$STACK" \
   --query "Stacks[0].Outputs[?OutputKey=='InstanceId'].OutputValue" --output text)
