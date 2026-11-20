@@ -17,7 +17,7 @@ mv .env.new .env
 
 # 2. Build one image at a time (keeps peak memory low), then start.
 compose="docker compose -f compose.prod.yaml"
-for service in web detector proxy; do
+for service in web worker detector proxy; do
   $compose build "$service"
 done
 $compose up -d --remove-orphans
