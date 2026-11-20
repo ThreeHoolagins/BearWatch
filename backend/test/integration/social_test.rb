@@ -77,6 +77,19 @@ class SocialTest < ActionDispatch::IntegrationTest
     assert_equal posts.map(&:id).sort, (first["posts"].map { _1["id"] } + rest).sort
   end
 
+  test "archive photos dated decades ago sit below every current bear, even nearby, and still paginate" do
+    current = bear(@tina, KATMAI, created_at: 300.days.ago)
+    archive = 22.times.map { |i| bear(@otis, ESTES_PARK, created_at: Time.utc(1950 + i, 7, 1, 12)) }
+    params = { lat: FORT_COLLINS[0], lng: FORT_COLLINS[1] }
+    get "/api/feed/global", params: params
+    first = response.parsed_body
+    assert_equal current.id, first["posts"].first["id"]
+    assert_match(/\A-\d+-\d+\z/, first["next_before"])
+
+    rest = ids("/api/feed/global", **params, before: first["next_before"])
+    assert_equal archive.reverse.map(&:id), first["posts"].drop(1).map { _1["id"] } + rest
+  end
+
   test "follow, see their bears in Following, unfollow" do
     otis_bear = bear(@otis, KATMAI)
     bear(@tina, KATMAI)

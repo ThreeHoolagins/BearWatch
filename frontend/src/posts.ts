@@ -27,6 +27,9 @@ export interface Post {
   place_name: string
   failure_reason: string | null
   created_at: string
+  // Archive photos only: who took it, and the public-domain source.
+  credit: string | null
+  source_url: string | null
   user: PublicUser
   fat_bear_win: { id: number; year: number } | null
   // Where the detector found the bear: centre x, centre y, width, height (0-1).
@@ -48,14 +51,17 @@ export interface Place {
 export const MAX_UPLOAD_BYTES = 12 * 1024 * 1024
 export const ACCEPTED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif']
 
-// "12m", "3h", "2d", "Nov 3"
+// "12m", "3h", "2d", "Nov 3", "Nov 3, 2025", and just "1939" for archive photos
 export function timeAgo(iso: string, now = Date.now()): string {
-  const seconds = Math.max(0, (now - new Date(iso).getTime()) / 1000)
+  const date = new Date(iso)
+  const seconds = Math.max(0, (now - date.getTime()) / 1000)
   if (seconds < 60) return 'now'
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m`
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`
   if (seconds < 7 * 86400) return `${Math.floor(seconds / 86400)}d`
-  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  const yearsBack = new Date(now).getFullYear() - date.getFullYear()
+  if (yearsBack > 1) return String(date.getFullYear())
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: yearsBack ? 'numeric' : undefined })
 }
 
 export function profilePath(user: Pick<PublicUser, 'nickname'>, myNickname?: string) {

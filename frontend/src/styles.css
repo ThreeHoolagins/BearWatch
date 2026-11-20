@@ -421,6 +421,7 @@ button.drop .btn { margin-top: 14px; }
 .photo-btn { display: block; width: 100%; padding: 0; border: 0; cursor: zoom-in; background: #1b1b1b; }
 .photo-btn img { display: block; width: 100%; height: auto; max-height: 640px; object-fit: contain; }
 .post .where { border-top: 1px dashed rgba(31, 59, 45, .35); }
+.photo-credit { margin-top: -8px; padding: 0 14px 12px 33px; font-size: 12px; opacity: .75; }
 .loading, .end { text-align: center; font-size: 13px; opacity: .7; padding: 18px 0 26px; min-height: 20px; }
 .more { padding: 14px 0 4px; }
 .pactions { display: flex; gap: 8px; padding: 8px 16px 6px; flex-wrap: wrap; }

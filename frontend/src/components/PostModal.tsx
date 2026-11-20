@@ -7,6 +7,7 @@ import { useSession } from '../session'
 import { Avatar } from './Avatar'
 import { PinIcon, TrophyIcon } from './icons'
 import { Modal } from './Modal'
+import { PhotoCredit } from './PhotoCredit'
 
 // onChanged: the post was awarded/revoked/removed, so lists should reload.
 export function PostModal({ post: initial, onClose, onChanged }: { post: Post; onClose: () => void; onChanged?: () => void }) {
@@ -44,6 +45,7 @@ export function PostModal({ post: initial, onClose, onChanged }: { post: Post; o
         {post.place_name}
         {post.fat_bear_win && <span className="winbadge inline"><TrophyIcon />Fat Bear Week {post.fat_bear_win.year} winner</span>}
       </div>
+      <PhotoCredit post={post} />
     </Modal>
   )
 }

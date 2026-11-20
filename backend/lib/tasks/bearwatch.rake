@@ -53,6 +53,15 @@ namespace :bearwatch do
 end
 
 namespace :bearwatch do
+  namespace :archive do
+    desc "Post the historic NPS bear photos in db/archive_photos.yml as nps_historic_archive (skips ones already posted)"
+    task import: :environment do
+      ArchiveImport.new.run
+    end
+  end
+end
+
+namespace :bearwatch do
   namespace :seed do
     desc "Development: remove the seed bears (and their photos), then seed again. Your own accounts are kept."
     task reset: :environment do

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { profilePath, timeAgo, type Post } from '../posts'
 import { Avatar } from './Avatar'
 import { PinIcon, TrophyIcon } from './icons'
+import { PhotoCredit } from './PhotoCredit'
 
 export function PostCard({ post, me, onOpen }: { post: Post; me?: string; onOpen: (post: Post) => void }) {
   return (
@@ -27,6 +28,7 @@ export function PostCard({ post, me, onOpen }: { post: Post; me?: string; onOpen
         <PinIcon />
         {post.place_name}
       </div>
+      <PhotoCredit post={post} />
     </article>
   )
 }

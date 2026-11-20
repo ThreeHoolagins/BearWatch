@@ -1,0 +1,188 @@
+# Historic bear photos posted by nps_historic_archive (bin/rails bearwatch:archive:import).
+#
+# Mostly from Yellowstone's online slide file, which says: "These images are in
+# the public domain and may be reproduced, free of charge with the proper credit
+# line" ("NPS Photo" or "NPS Photo by <photographer>"). Only photos by NPS staff
+# or uncredited NPS photos are listed; the slide file also holds work by outside
+# photographers, which isn't ours to use.
+#
+# Every photo here passed the detector (a bear, no person) when it was picked.
+# taken_on is a year, or a date when the archive gives one. latitude/longitude
+# are rounded to one decimal like every post.
+---
+- image_url: https://upload.wikimedia.org/wikipedia/commons/7/78/Grizzly_bear%2C_male_looking_back%2C_Yellowstone%2C_September_19%2C_1913_%28f0799f7d-01be-4a01-accb-bfd8bc8c0e2a%29.jpg
+  source_url: https://commons.wikimedia.org/wiki/File:Grizzly_bear,_male_looking_back,_Yellowstone,_September_19,_1913_(f0799f7d-01be-4a01-accb-bfd8bc8c0e2a).jpg
+  taken_on: 1913-09-19
+  place_name: Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: Joseph S. Dixon, 1913, NPS History Collection
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Images/10141.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Page-2.htm#10141
+  taken_on: 1956
+  place_name: Dunraven Pass, Yellowstone National Park, WY
+  latitude: 44.8
+  longitude: -110.5
+  credit: NPS Photo by Condon, 1956
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Images/00118.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Page.htm#00118
+  taken_on: 1962
+  place_name: Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo, 1962
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Images/00116.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Page.htm#00116
+  taken_on: 1963
+  place_name: Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo, 1963
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Images/01596.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Page-2.htm#01596
+  taken_on: 1963
+  place_name: Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo, 1963
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Images/00031.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Page.htm#00031
+  taken_on: 1964
+  place_name: Terrace Spring, Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.8
+  credit: NPS Photo by Bryan Harry, 1964
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Images/00114.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Page.htm#00114
+  taken_on: 1964
+  place_name: Phantom Lake, Yellowstone National Park, WY
+  latitude: 44.9
+  longitude: -110.3
+  credit: NPS Photo by Bryan Harry, 1964
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Images/00158.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Page-2.htm#00158
+  taken_on: 1964
+  place_name: Trout Creek, Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo by John Good, 1964
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Images/00165.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Page-2.htm#00165
+  taken_on: 1964
+  place_name: Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo by John Good, 1964
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Images/11653.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Page-4.htm#11653
+  taken_on: 1964
+  place_name: Trout Creek, Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo by Bryan Harry, 1964
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Images/00045.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Page.htm#00045
+  taken_on: 1966
+  place_name: Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo, 1966
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Images/00037.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Page.htm#00037
+  taken_on: 1966
+  place_name: Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo by William S. Keller, 1966
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Images/00109.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Page.htm#00109
+  taken_on: 1966
+  place_name: Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo by Bryan Harry, 1966
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Images/00153.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Page-2.htm#00153
+  taken_on: 1966
+  place_name: Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo by Bryan Harry, 1966
+  avatar: true
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Images/00156.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Page-2.htm#00156
+  taken_on: 1966
+  place_name: Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo by John Good, 1966
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Images/00026.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Page.htm#00026
+  taken_on: 1969
+  place_name: Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo by J.R. Douglass, 1969
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Images/00041.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/grizzlybear/Page.htm#00041
+  taken_on: 1970
+  place_name: Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo by William W. Dunmire, 1970
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Images/00106.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Page.htm#00106
+  taken_on: 1971
+  place_name: Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo by Canter, 1971
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Images/00024.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Page.htm#00024
+  taken_on: 1974
+  place_name: Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo by Paul Schullery, 1974
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Images/00035.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Page.htm#00035
+  taken_on: 1974
+  place_name: Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo by Paul Schullery, 1974
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Images/01594.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Page-2.htm#01594
+  taken_on: 1976
+  place_name: Yellowstone National Park, WY
+  latitude: 44.6
+  longitude: -110.5
+  credit: NPS Photo by Harlan Kredit, 1976
+
+- image_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Images/07895.jpg
+  source_url: https://www.nps.gov/features/yell/slidefile/mammals/blackbear/Page-2.htm#07895
+  taken_on: 1976
+  place_name: Yellowstone Lake, Yellowstone National Park, WY
+  latitude: 44.4
+  longitude: -110.4
+  credit: NPS Photo by Harlan Kredit, 1976

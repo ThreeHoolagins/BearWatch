@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_14_000001) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_20_000001) do
   create_table "fat_bear_champions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.integer "year", null: false
     t.string "bear_name", limit: 60, null: false
@@ -84,6 +84,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_14_000001) do
     t.float "bear_y"
     t.float "bear_w"
     t.float "bear_h"
+    t.string "credit", limit: 200
+    t.string "source_url", limit: 500
     t.index ["image_key"], name: "index_posts_on_image_key", unique: true
     t.index ["status", "created_at"], name: "index_posts_on_status_and_created_at"
     t.index ["status", "latitude", "longitude"], name: "index_posts_on_status_and_latitude_and_longitude"
