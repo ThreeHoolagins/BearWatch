@@ -26,16 +26,36 @@ class Post < ApplicationRecord
     before.present? ? scope.where(id: ...before.to_i) : scope
   end
 
+  # New bears wait this long before reaching the Global feed, so admins have a
+  # chance to take spam down before everyone sees it.
+  GLOBAL_DELAY = 10.minutes
+  # A bear right next to you ranks as if it were this much newer. The
+  # lift fades to nothing at NEARBY_MILES away.
+  NEARBY_BOOST = 24.hours
+  NEARBY_MILES = 500
   MILES_TO_METERS = 1609.344
-  # Published posts within `miles` of a point. A bounding box narrows the rows
-  # (uses the status/latitude index) before the exact great-circle distance.
-  def self.near(latitude, longitude, miles: 500)
-    lat_span = miles / 69.0
-    lng_span = miles / (69.0 * [ Math.cos(latitude * Math::PI / 180), 0.01 ].max)
-    scope = where(latitude: (latitude - lat_span)..(latitude + lat_span))
-    scope = scope.where(longitude: (longitude - lng_span)..(longitude + lng_span)) if lng_span < 180
-    scope.where("ST_Distance_Sphere(POINT(posts.longitude, posts.latitude), POINT(?, ?)) <= ?",
-                longitude, latitude, miles * MILES_TO_METERS)
+
+  # Global feed: bears from anywhere, newest first, with nearby bears lifted
+  # when a location is given. The rank is whole seconds, so the cursor is
+  # "rank-id" and pages stay stable as new bears arrive.
+  def self.global_page(latitude: nil, longitude: nil, before: nil, limit: 20)
+    rank = "TIMESTAMPDIFF(SECOND, '2000-01-01', posts.created_at)"
+    if latitude && longitude
+      distance = sanitize_sql_array([ "ST_Distance_Sphere(POINT(posts.longitude, posts.latitude), POINT(?, ?))", longitude, latitude ])
+      rank = "#{rank} + FLOOR(#{NEARBY_BOOST.to_i} * GREATEST(0, 1 - #{distance} / #{NEARBY_MILES * MILES_TO_METERS}))"
+    end
+
+    scope = where(created_at: ..GLOBAL_DELAY.ago)
+      .select("posts.*, #{rank} AS feed_rank")
+      .order(Arel.sql("feed_rank DESC, posts.id DESC"))
+      .limit(limit)
+    cursor_rank, cursor_id = before.to_s.split("-", 2).map { Integer(_1, exception: false) }
+    scope = scope.where("(#{rank}, posts.id) < (?, ?)", cursor_rank, cursor_id) if cursor_rank && cursor_id
+    scope
+  end
+
+  def feed_cursor
+    "#{self[:feed_rank].to_i}-#{id}"
   end
 
   # Where the original upload waits for the worker. Deleted once processed.

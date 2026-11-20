@@ -15,12 +15,19 @@ an annotated git tag (`phase-0` ... `phase-4`) with these notes.
   threads, YJIT off, `MALLOC_ARENA_MAX=2`, lean MySQL, a one-thread detector
   that unloads its model when idle. Measured idle stack: ~450 MB.
 - **AWS runbook:** `docs/aws-deploy.md` (single VM + Docker Compose).
+- **Global feed from anywhere:** bears from everywhere, newest first, with
+  nearby ones lifted (up to 24 hours' worth, fading out at 500 miles) when
+  location is on. Location is now optional. New bears wait 10 minutes before
+  reaching Global so admins can take down spam first. Cursor is `rank-id`.
+- **Terms and privacy:** Terms of Service are out of draft and now grant Bear
+  Watch a license to redistribute posted photos; a new Privacy Policy covers
+  what we keep (provider account ID, nickname, posts) and what we don't. Update
+  its "Services we use" line if photos move to R2.
 - Posters can delete their own bears; development seed data with 25
   pop-culture bears and 32 public-domain bear photos.
 
-Still to do before launch: database backups, a legal review of the Terms and a
-privacy policy, a detector accuracy run on a bigger photo set, and an R2 custom
-domain.
+Still to do before launch: database backups, a detector accuracy run on a
+bigger photo set, and an R2 custom domain.
 
 ## Phase 4: Ranger station and Fat Bear Week (2026-11-13)
 

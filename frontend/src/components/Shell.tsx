@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
-import { useOpenTerms } from '../terms'
+import { useOpenPrivacy, useOpenTerms } from '../terms'
 import { Band } from './Band'
 import { RailChampion } from './ChampionCard'
 import { FollowingIcon, GlobalIcon, PostIcon, ProfileIcon, TreeIcon } from './icons'
@@ -16,6 +16,7 @@ const TABS = [
 // optional right column on wide screens.
 export function Shell({ children, rail = false, wide = false, back = false }: { children: ReactNode; rail?: boolean; wide?: boolean; back?: boolean }) {
   const openTerms = useOpenTerms()
+  const openPrivacy = useOpenPrivacy()
 
   return (
     <>
@@ -30,6 +31,9 @@ export function Shell({ children, rail = false, wide = false, back = false }: { 
           ))}
           <button className="link tos-link" onClick={openTerms}>
             Terms of Service
+          </button>
+          <button className="link tos-link" onClick={openPrivacy}>
+            Privacy Policy
           </button>
         </nav>
         <main className={`main ${wide ? 'wide' : ''}`}>{children}</main>
@@ -47,7 +51,8 @@ export function Shell({ children, rail = false, wide = false, back = false }: { 
                 <li>Keep nicknames and photos clean.</li>
               </ol>
               <p className="fine">
-                <button className="link" onClick={openTerms}>Full Terms of Service</button>
+                <button className="link" onClick={openTerms}>Full Terms of Service</button> ·{' '}
+                <button className="link" onClick={openPrivacy}>Privacy</button>
               </p>
             </div>
             <div className="foot">Bear Watch · Fort Collins, CO</div>

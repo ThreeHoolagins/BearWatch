@@ -20,7 +20,7 @@ This doc records decisions as we make them, open questions, and build phases.
 | D1 | SSO providers | **Google + GitHub** for v1. Facebook dropped (app review / business verification overhead). |
 | D2 | What we store from SSO | Provider name + provider's stable user ID (`sub` / GitHub id) only. **No OAuth tokens stored.** |
 | D3 | Account linking | One user can link multiple SSO identities, so a separate `identities` table (not a column per provider). |
-| D4 | "Within 500 mi" location | Browser geolocation prompt, sent per request, **never saved**. |
+| D4 | Global feed location | Optional browser geolocation, sent per request, **never saved**. Global shows bears from anywhere; nearby ones (within 500 mi) are ranked higher. Bears wait 10 minutes before reaching Global. |
 | D5 | Post location | User-entered, rounded to ~10 km (1 decimal place) before saving. Shown as a place name ("Fort Collins, CO" / park name) below the photo. |
 | D6 | Fat Bear Wins | Awarded **by hand** by admins to a specific post (the winner of the off-platform Fat Bear Week). Profile count = number of winning posts. |
 | D7 | Admin panel | Verified admins only: ban/unban users (with reason), award Fat Bear Week wins to posts. |

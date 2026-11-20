@@ -3,11 +3,12 @@ import logo from '../assets/bearwatch-logo.svg'
 import { GitHubIcon, GoogleIcon, Ridge } from '../components/icons'
 import { SsoButton } from '../components/SsoButton'
 import { useSession } from '../session'
-import { useOpenTerms } from '../terms'
+import { useOpenPrivacy, useOpenTerms } from '../terms'
 
 export function Login() {
   const { session } = useSession()
   const openTerms = useOpenTerms()
+  const openPrivacy = useOpenPrivacy()
   const [params] = useSearchParams()
   const providers = session?.providers ?? []
   const authError = params.get('auth_error')
@@ -54,7 +55,7 @@ export function Login() {
 
           <p className="fine">
             By continuing you agree to our <button className="link" onClick={openTerms}>Terms of Service</button>. We never see your
-            password.
+            password or keep your email (<button className="link" onClick={openPrivacy}>Privacy Policy</button>).
           </p>
         </div>
       </div>

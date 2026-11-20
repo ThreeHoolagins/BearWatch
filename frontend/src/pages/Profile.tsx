@@ -9,7 +9,7 @@ import { Shell } from '../components/Shell'
 import { SsoButton } from '../components/SsoButton'
 import type { Post, Profile as ProfileData } from '../posts'
 import { PROVIDER_LABELS, useSession, type Provider } from '../session'
-import { useOpenTerms } from '../terms'
+import { useOpenPrivacy, useOpenTerms } from '../terms'
 import { usePostPages } from '../usePostPages'
 
 const LINK_ERRORS: Record<string, string> = {
@@ -191,6 +191,7 @@ function ProfileView({ nickname }: { nickname: string }) {
 function MyAccount() {
   const { session, signOut } = useSession()
   const openTerms = useOpenTerms()
+  const openPrivacy = useOpenPrivacy()
   const [params] = useSearchParams()
   const user = session?.user
   const linked = session?.linked_providers ?? []
@@ -227,7 +228,8 @@ function MyAccount() {
         )}
         <button className="btn ghost danger" onClick={() => void signOut()}><SignOutIcon />Sign out</button>
         <p className="fine center">
-          <button className="link" onClick={openTerms}>Terms of Service</button>
+          <button className="link" onClick={openTerms}>Terms of Service</button> ·{' '}
+          <button className="link" onClick={openPrivacy}>Privacy Policy</button>
         </p>
       </div>
     </>

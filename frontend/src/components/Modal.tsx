@@ -6,7 +6,7 @@ interface ModalProps {
   children: ReactNode
   footer?: ReactNode
   size?: 'sm' | 'md'
-  // Show the × in the header. The Terms modal uses a footer Close button instead.
+  // Show the × in the header. The Terms and Privacy modal uses a footer Close button instead.
   closeButton?: boolean
   className?: string
 }

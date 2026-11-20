@@ -35,7 +35,8 @@ export interface Post {
 
 export interface PostPage {
   posts: Post[]
-  next_before: number | null
+  // An id, or an opaque "rank-id" string for the Global feed.
+  next_before: number | string | null
 }
 
 export interface Place {

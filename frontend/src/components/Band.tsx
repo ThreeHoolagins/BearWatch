@@ -2,15 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import cornerLogo from '../assets/bearwatch-corner-logo.svg'
 import { useSession } from '../session'
-import { useOpenTerms } from '../terms'
+import { useOpenPrivacy, useOpenTerms } from '../terms'
 import { Avatar } from './Avatar'
 import { DocIcon, ProfileIcon, ShieldIcon, SignOutIcon } from './icons'
 
 // The forest-green header. Signed in on desktop it carries the account
-// dropdown (profile, admin, terms, sign out).
+// dropdown (profile, admin, terms, privacy, sign out).
 export function Band({ signedIn = false, back = false }: { signedIn?: boolean; back?: boolean }) {
   const { session, signOut } = useSession()
   const openTerms = useOpenTerms()
+  const openPrivacy = useOpenPrivacy()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -65,6 +66,9 @@ export function Band({ signedIn = false, back = false }: { signedIn?: boolean; b
               )}
               <button role="menuitem" onClick={() => { setMenuOpen(false); openTerms() }}>
                 <DocIcon />Terms of Service
+              </button>
+              <button role="menuitem" onClick={() => { setMenuOpen(false); openPrivacy() }}>
+                <DocIcon />Privacy Policy
               </button>
               <hr />
               <button role="menuitem" className="danger" onClick={() => { setMenuOpen(false); void signOut() }}>

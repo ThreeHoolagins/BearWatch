@@ -13,8 +13,9 @@ class SocialTest < ActionDispatch::IntegrationTest
     sign_in_as(@me)
   end
 
-  def bear(user, (lat, lng), status: "published", **attrs)
-    user.posts.create!(place_name: "Somewhere", latitude: lat, longitude: lng, status:, image_key: SecureRandom.hex(8), **attrs)
+  # Bears are an hour old by default so they've cleared the Global feed delay.
+  def bear(user, (lat, lng), status: "published", created_at: 1.hour.ago, **attrs)
+    user.posts.create!(place_name: "Somewhere", latitude: lat, longitude: lng, status:, image_key: SecureRandom.hex(8), created_at:, **attrs)
   end
 
   def ids(path, params = {})
@@ -23,18 +24,35 @@ class SocialTest < ActionDispatch::IntegrationTest
     response.parsed_body["posts"].map { _1["id"] }
   end
 
-  test "global feed shows published bears within 500 miles, newest first" do
+  test "global feed shows published bears from anywhere, newest first" do
+    old = bear(@otis, KATMAI, created_at: 2.hours.ago)
     near = bear(@otis, ESTES_PARK)
-    medium = bear(@tina, YELLOWSTONE)
-    bear(@otis, KATMAI)
     bear(@tina, ESTES_PARK, status: "rejected")
     bear(@tina, ESTES_PARK, status: "processing")
 
-    assert_equal [ medium.id, near.id ], ids("/api/feed/global", lat: FORT_COLLINS[0], lng: FORT_COLLINS[1])
+    assert_equal [ near.id, old.id ], ids("/api/feed/global")
   end
 
-  test "global feed needs a location" do
-    get "/api/feed/global"
+  test "global feed lifts bears near you" do
+    far_new = bear(@tina, KATMAI, created_at: 1.hour.ago)
+    near_old = bear(@otis, ESTES_PARK, created_at: 20.hours.ago)
+    medium_old = bear(@tina, YELLOWSTONE, created_at: 21.hours.ago)
+    far_old = bear(@otis, KATMAI, created_at: 22.hours.ago)
+
+    assert_equal [ far_new.id, near_old.id, medium_old.id, far_old.id ], ids("/api/feed/global")
+    assert_equal [ near_old.id, far_new.id, medium_old.id, far_old.id ],
+                 ids("/api/feed/global", lat: FORT_COLLINS[0], lng: FORT_COLLINS[1])
+  end
+
+  test "global feed holds back bears for their first 10 minutes" do
+    bear(@otis, ESTES_PARK, created_at: 5.minutes.ago)
+    settled = bear(@otis, ESTES_PARK, created_at: 11.minutes.ago)
+
+    assert_equal [ settled.id ], ids("/api/feed/global")
+  end
+
+  test "global feed rejects a bad location" do
+    get "/api/feed/global", params: { lat: 200, lng: 0 }
     assert_response :unprocessable_entity
   end
 
@@ -48,14 +66,15 @@ class SocialTest < ActionDispatch::IntegrationTest
   end
 
   test "feeds paginate with a cursor" do
-    posts = 25.times.map { bear(@otis, ESTES_PARK) }
-    get "/api/feed/global", params: { lat: FORT_COLLINS[0], lng: FORT_COLLINS[1] }
+    posts = 25.times.map { |i| bear(@otis, i.even? ? ESTES_PARK : KATMAI, created_at: (30 - i).hours.ago) }
+    params = { lat: FORT_COLLINS[0], lng: FORT_COLLINS[1] }
+    get "/api/feed/global", params: params
     first = response.parsed_body
     assert_equal 20, first["posts"].size
-    assert_equal posts.last.id, first["posts"].first["id"]
 
-    rest = ids("/api/feed/global", lat: FORT_COLLINS[0], lng: FORT_COLLINS[1], before: first["next_before"])
-    assert_equal posts.first(5).map(&:id).reverse, rest
+    rest = ids("/api/feed/global", **params, before: first["next_before"])
+    assert_equal 5, rest.size
+    assert_equal posts.map(&:id).sort, (first["posts"].map { _1["id"] } + rest).sort
   end
 
   test "follow, see their bears in Following, unfollow" do
