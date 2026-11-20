@@ -15,6 +15,8 @@ an annotated git tag (`phase-0` ... `phase-4`) with these notes.
   threads, YJIT off, `MALLOC_ARENA_MAX=2`, lean MySQL, a one-thread detector
   that unloads its model when idle. Measured idle stack: ~450 MB.
 - **AWS runbook:** `docs/aws-deploy.md` (single VM + Docker Compose).
+- **CI/CD:** GitHub Actions tests every push; passing `main` commits move the
+  `production` branch, which CodePipeline deploys to the instance via SSM.
 - **Global feed from anywhere:** bears from everywhere, newest first, with
   nearby ones lifted (up to 24 hours' worth, fading out at 500 miles) when
   location is on. Location is now optional. New bears wait 10 minutes before

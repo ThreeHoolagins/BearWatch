@@ -80,13 +80,37 @@ runs out of memory, make sure swap is on, or build one service at a time:
 
 ## 4. Updating
 
-```sh
-git pull
-docker compose -f compose.prod.yaml up -d --build
-```
+Production (the `bearwatch` CloudFormation stack, `infra/aws/bearwatch.yaml`)
+deploys itself:
 
-`web` runs `db:prepare` on start, which applies new migrations. To free disk
-after a few updates: `docker image prune -f`.
+1. Push to `main`.
+2. GitHub Actions (`.github/workflows/ci.yml`) runs the backend tests and the
+   frontend lint and build. If they pass, it moves the `production` branch to
+   that commit. If they fail, nothing ships.
+3. CodePipeline `bearwatch-deploy` sees `production` move (through the
+   `bearwatch-github` CodeConnections link) and starts CodeBuild, which runs
+   `infra/aws/deploy.sh <commit>`.
+4. That tells the instance, over SSM, to check out the commit and run
+   `infra/aws/host-deploy.sh`: rebuild `.env` from `/bearwatch/` parameters,
+   build images one at a time, restart, and wait for `web` to be healthy.
+
+Deploys queue rather than overlap. Watch them in the console under
+CodePipeline > `bearwatch-deploy`, or the logs in CloudWatch
+`/aws/codebuild/bearwatch`.
+
+GitHub Actions has no AWS credentials: this account's org policy blocks GitHub
+OIDC, so AWS pulls from GitHub instead (same as FF15). The connection had to be
+authorized once in the console (Developer Tools > Settings > Connections).
+
+**By hand** (e.g. after changing a `/bearwatch/` setting, or to redeploy without
+a push): `AWS_PROFILE=ff15 infra/aws/deploy.sh`, which redeploys
+`origin/production`. Pass a commit or branch to deploy something else.
+Or re-run the pipeline: **Release change** in the console.
+
+**Rolling back:** `git revert` the bad commit and push to `main`.
+
+`web` runs `db:prepare` on start, which applies new migrations. Old images are
+pruned after each deploy.
 
 ## 5. Day to day
 

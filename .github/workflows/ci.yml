@@ -1,0 +1,76 @@
+# CI: backend tests and frontend checks on every push and pull request.
+#
+# Deploys: when CI passes on main, the `promote` job fast-forwards the
+# `production` branch to that commit. AWS CodePipeline (infra/aws/bearwatch.yaml)
+# watches `production` and deploys it. No AWS credentials live here; the AWS
+# account's org policy blocks GitHub OIDC, so AWS pulls from GitHub instead.
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -pci"
+          --health-interval 5s --health-timeout 3s --health-retries 30
+    env:
+      RAILS_ENV: test
+      DATABASE_HOST: 127.0.0.1
+      DATABASE_USERNAME: root
+      DATABASE_PASSWORD: ci
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install --no-install-recommends -y libvips-tools
+      - uses: ruby/setup-ruby@v1
+        with:
+          working-directory: backend
+          bundler-cache: true
+      - run: bin/rails db:create db:schema:load
+      - run: bin/rails test
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  # Only tested commits reach production. A plain (non-force) push, so an
+  # older run finishing late can't move production backwards.
+  promote:
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency: promote
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: git push origin "${GITHUB_SHA}:refs/heads/production"

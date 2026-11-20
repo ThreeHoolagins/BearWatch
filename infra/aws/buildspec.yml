@@ -1,0 +1,11 @@
+# CodeBuild (from the CodePipeline in bearwatch.yaml): deploy the exact commit the
+# pipeline picked up. Images are built on the instance itself, so nothing is built here.
+version: 0.2
+
+env:
+  shell: bash
+
+phases:
+  build:
+    commands:
+      - bash infra/aws/deploy.sh "${COMMIT_ID:-$CODEBUILD_RESOLVED_SOURCE_VERSION}"
