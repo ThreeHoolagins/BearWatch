@@ -21,8 +21,9 @@ an annotated git tag (`phase-0` ... `phase-4`) with these notes.
   reaching Global so admins can take down spam first. Cursor is `rank-id`.
 - **Terms and privacy:** Terms of Service are out of draft and now grant Bear
   Watch a license to redistribute posted photos; a new Privacy Policy covers
-  what we keep (provider account ID, nickname, posts) and what we don't. Update
-  its "Services we use" line if photos move to R2.
+  what we keep (provider account ID, nickname, posts) and what we don't.
+- **Production photos on R2:** prod now stores new photos in the shared
+  `bearwatch-photos` bucket (at the root; dev uses `development/`).
 - Posters can delete their own bears; development seed data with 25
   pop-culture bears and 32 public-domain bear photos.
 

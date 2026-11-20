@@ -120,7 +120,7 @@ function PrivacyText() {
       </p>
       <h4>Services we use</h4>
       <p>
-        Google or GitHub (sign-in), Amazon Web Services (hosting and photo storage) and OpenStreetMap
+        Google or GitHub (sign-in), Amazon Web Services (hosting), Cloudflare (photo storage) and OpenStreetMap
         Nominatim (place-name search, sent from our server, not your browser).
       </p>
       <h4>Your choices</h4>
