@@ -10,6 +10,7 @@ REPO=https://github.com/ThreeHoolagins/BearWatch.git
 params=$(cat <<JSON
 {"commands":[
   "set -euo pipefail",
+  "test -f /opt/bearwatch/.bootstrapped || { echo 'First-boot setup not finished yet, try again in a few minutes'; exit 1; }",
   "test -d /opt/bearwatch/app/.git || git clone $REPO /opt/bearwatch/app",
   "cd /opt/bearwatch/app && git fetch --quiet origin main && git reset --hard --quiet origin/main",
   "bash infra/aws/host-deploy.sh"

@@ -148,7 +148,7 @@ Resources:
           mkdir -p $plugins
           curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-aarch64 \
             -o $plugins/docker-compose
-          buildx=$(curl -fsSL https://api.github.com/repos/docker/buildx/releases/latest | grep -m1 '"tag_name"' | cut -d'"' -f4)
+          buildx=$(curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/docker/buildx/releases/latest | sed 's#.*/##')
           curl -fsSL "https://github.com/docker/buildx/releases/download/${buildx}/buildx-${buildx}.linux-arm64" \
             -o $plugins/docker-buildx
           chmod +x $plugins/*
