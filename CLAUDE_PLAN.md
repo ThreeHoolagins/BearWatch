@@ -5,6 +5,7 @@ This doc records decisions as we make them, open questions, and build phases.
 
 ## Status
 - **Phase 0 (done):** repo, Docker skeleton, design mockups.
+- **Launch prep (in progress, `main`):** Discord alerts (D26), production hardening and low-memory tuning (D29), AWS runbook `docs/aws-deploy.md`. Remaining before launch: database backups, ToS legal review + privacy policy, detector accuracy run (Q10), R2 custom domain (DNS to Cloudflare).
 - **Phase 4 (done, branch `phase-2-uploads`):** Ranger station: user search, ban/unban with reason (admins can't ban themselves or other admins), Fat Bear Week wins (one per year, awarded/revoked from the post pop-up, badges on posts and profiles), champion card editor (Bear Watch post or outside photo with credit and link, live preview) shown in the sidebar and as a mobile banner, admin post removal (deletes the stored photo). Alert email verified over Gmail SMTP.
 - **Phase 3 (done, branch `phase-2-uploads`):** Global feed (published bears within 500 miles, `ST_Distance_Sphere` with a bounding-box prefilter), Following feed, cursor pagination with infinite scroll, profiles for any user (`/u/:nickname`), follow/unfollow, bear-face avatars (crop + zoom + drag, starting on the detector's bear box).
 - **Phase 2 (done, branch `phase-2-uploads`):** photo uploads end to end: magic-byte checks, libvips re-encode to stripped WebP in a no-internet worker, YOLOX-S bear check, place search (Nominatim), rate limits, profile grid. Verified in dev and in the production stack.
@@ -43,7 +44,7 @@ This doc records decisions as we make them, open questions, and build phases.
 | D29 | Small over fast | Production favours low memory: one Puma process (2 threads), Solid Queue in `async` mode (threads, no forked processes) with 3 s / 10 s polling, YJIT off, `MALLOC_ARENA_MAX=2`, a one-thread detector that unloads its model after 10 idle minutes, a lean MySQL (64 MB buffer pool, no binlog). Logs rotate at 3 x 10 MB. Target box: 1-2 GB RAM + swap. Runbook: `docs/aws-deploy.md`. |
 | D11 | Bear check | ~~bear-conservation detect step~~ → **Option B**: a permissively licensed COCO detector (e.g. YOLOX, Apache-2.0) run with `onnxruntime` (MIT), using COCO's built-in `bear` class at 85% confidence. Avoids Ultralytics' AGPL terms (bear-conservation is MIT but its model is trained with and runs on Ultralytics). Validate against real photos before committing to it. |
 | D19 | Photo storage | **Cloudflare R2** in production (free tier, no egress fees); local disk in development. Storage is swappable via `STORAGE_BACKEND`. The no-internet worker writes to a shared volume; the web container uploads to R2. Setup steps: `docs/r2-setup.md`. |
-| D20 | Repo visibility | **Private.** Still: keep secrets in `.env` only, run a secret scan before any change of mind. |
+| D20 | Repo visibility | **Public** on GitHub (`ThreeHoolagins/BearWatch`) as of 2026-11-19, changed from private. Secret scan of all history was clean; history was rewritten so commits use the GitHub noreply address and no personal email appears. Secrets stay in `.env` (git-ignored); scan again before every push that touches config. |
 | D21 | Real SSO | Google + GitHub verified end to end on 2026-11-12 (sign-up, linking, returning sign-in). Production pins the callback host and allowed Host to `APP_HOST`. |
 
 ## Architecture (current draft)
