@@ -1,0 +1,182 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Bear Watch on one small EC2 instance running compose.prod.yaml. No SSH (SSM Session Manager
+  only), config in SSM Parameter Store under /bearwatch/, nightly MySQL + photo backups to S3.
+  Deploys: infra/aws/deploy.sh (SSM Run Command -> git pull + docker compose up --build).
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t4g.small
+    AllowedValues: [t4g.micro, t4g.small, t4g.medium]
+  AmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
+  RootVolumeGiB:
+    Type: Number
+    Default: 20
+    MinValue: 20
+
+Resources:
+  BackupBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration: { Status: Enabled }
+      LifecycleConfiguration:
+        Rules:
+          # Database dumps are small; keep a month of them.
+          - Id: expire-old-dumps
+            Status: Enabled
+            Prefix: mysql/
+            ExpirationInDays: 30
+          # Photos are synced (a mirror), so only old versions of deleted ones expire.
+          - Id: expire-deleted-photos
+            Status: Enabled
+            NoncurrentVersionExpiration: { NoncurrentDays: 14 }
+
+  BackupBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref BackupBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: s3:*
+            Resource: [!GetAtt BackupBucket.Arn, !Sub "${BackupBucket.Arn}/*"]
+            Condition: { Bool: { aws:SecureTransport: "false" } }
+
+  BackupBucketParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /bearwatch/BACKUP_BUCKET
+      Type: String
+      Value: !Ref BackupBucket
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-instance
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: bearwatch-runtime
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: AppConfig
+                Effect: Allow
+                Action: [ssm:GetParametersByPath, ssm:GetParameter]
+                Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/bearwatch*
+              - Sid: ListBackups
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt BackupBucket.Arn
+              - Sid: WriteBackups
+                Effect: Allow
+                Action: [s3:PutObject, s3:GetObject, s3:DeleteObject]
+                Resource: !Sub ${BackupBucket.Arn}/*
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: !Sub ${AWS::StackName}-instance
+      Roles: [!Ref InstanceRole]
+
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Bear Watch web (HTTP/HTTPS only, no SSH)
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0, Description: HTTP }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0, Description: HTTPS }
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIpv6: "::/0", Description: HTTP v6 }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIpv6: "::/0", Description: HTTPS v6 }
+      Tags:
+        - { Key: Name, Value: !Sub "${AWS::StackName}-web" }
+
+  Instance:
+    Type: AWS::EC2::Instance
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref AmiId
+      IamInstanceProfile: !Ref InstanceProfile
+      SecurityGroupIds: [!GetAtt WebSecurityGroup.GroupId]
+      DisableApiTermination: true
+      CreditSpecification: { CPUCredits: standard }
+      MetadataOptions:
+        HttpTokens: required
+        HttpPutResponseHopLimit: 1
+        HttpEndpoint: enabled
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: !Ref RootVolumeGiB
+            VolumeType: gp3
+            Encrypted: true
+            DeleteOnTermination: false
+      Tags:
+        - { Key: Name, Value: !Sub "${AWS::StackName}-prod" }
+        - { Key: Project, Value: bearwatch }
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          set -euxo pipefail
+          dnf install -y docker git
+          systemctl enable --now docker
+          plugins=/usr/local/lib/docker/cli-plugins
+          mkdir -p $plugins
+          curl -fsSL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-aarch64 \
+            -o $plugins/docker-compose
+          buildx=$(curl -fsSL https://api.github.com/repos/docker/buildx/releases/latest | grep -m1 '"tag_name"' | cut -d'"' -f4)
+          curl -fsSL "https://github.com/docker/buildx/releases/download/${buildx}/buildx-${buildx}.linux-arm64" \
+            -o $plugins/docker-buildx
+          chmod +x $plugins/*
+          # 2 GiB swap: the first image build and libvips spikes need it on a small box.
+          if [ ! -f /swapfile ]; then
+            dd if=/dev/zero of=/swapfile bs=1M count=2048
+            chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+            echo '/swapfile swap swap defaults 0 0' >> /etc/fstab
+            echo 'vm.swappiness=10' > /etc/sysctl.d/99-swap.conf && sysctl --system
+          fi
+          mkdir -p /opt/bearwatch
+          touch /opt/bearwatch/.bootstrapped
+
+  PublicIp:
+    Type: AWS::EC2::EIP
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref Instance
+      Tags:
+        - { Key: Name, Value: !Sub "${AWS::StackName}-prod" }
+
+Outputs:
+  PublicIp:
+    Value: !Ref PublicIp
+    Description: Point the DNS A record for APP_HOST here.
+  InstanceId:
+    Value: !Ref Instance
+  BackupBucketName:
+    Value: !Ref BackupBucket
