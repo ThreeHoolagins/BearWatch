@@ -8,6 +8,7 @@ an annotated git tag (`phase-0` ... `phase-4`) with these notes.
 - **Discord alerts** replace the Gmail SMTP email. Out-of-honey (R2 free-tier
   cap) alerts and a new `ErrorAlerts` middleware that pings on 429s and 5xx
   errors, once per status code per 10 minutes. `DISCORD_WEBHOOK_URL` in `.env`.
+  New sign-ups (after the nickname step) ping the same channel.
 - **Production hardening:** Caddy security headers (HSTS, CSP, nosniff,
   Referrer-Policy, Permissions-Policy), log rotation, a `web` healthcheck the
   proxy waits on, memory caps on every service.

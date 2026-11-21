@@ -22,6 +22,17 @@ class AuthFlowTest < ActionDispatch::IntegrationTest
     assert_equal [ "github", "gh-123" ], [ identity.provider, identity.uid ]
   end
 
+  test "a new sign-up alerts Discord" do
+    ENV["DISCORD_WEBHOOK_URL"] = "https://discord.com/api/webhooks/1/test"
+    sign_in_with(:github)
+
+    assert_enqueued_with(job: DiscordAlertJob, args: [ ":bear: New bear watcher: `otis_superfan` signed up with GitHub (localhost, 1 total)" ]) do
+      api :post, "/api/signup", nickname: "otis_superfan"
+    end
+  ensure
+    ENV.delete("DISCORD_WEBHOOK_URL")
+  end
+
   test "returning account signs straight in" do
     user = User.create!(nickname: "grizzwald")
     user.identities.create!(provider: "github", uid: "gh-123")
