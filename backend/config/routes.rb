@@ -22,6 +22,7 @@ Rails.application.routes.draw do
     end
     put "me/avatar", to: "avatars#update"
     get "champion", to: "champions#show"
+    get "bulletins", to: "bulletins#index"
 
     namespace :admin do
       get "users", to: "users#index"
@@ -31,6 +32,7 @@ Rails.application.routes.draw do
       resources :posts, only: %i[index destroy]
       get "champion", to: "champions#show"
       put "champion/:year", to: "champions#update"
+      resources :bulletins, only: %i[index create update destroy]
     end
     get "places/search", to: "places#search"
     get "places/reverse", to: "places#reverse"

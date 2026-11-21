@@ -10,7 +10,28 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_20_000001) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_21_000001) do
+  create_table "bulletins", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "title", limit: 80, null: false
+    t.string "body", limit: 300, null: false
+    t.string "kind", limit: 8, default: "link", null: false
+    t.string "link_url", limit: 500
+    t.string "link_text", limit: 40, null: false
+    t.string "sponsor", limit: 60
+    t.string "image_key", limit: 64
+    t.string "image_storage", limit: 8
+    t.integer "image_width"
+    t.integer "image_height"
+    t.integer "image_bytes"
+    t.boolean "active", default: true, null: false
+    t.integer "position", default: 0, null: false
+    t.bigint "updated_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active", "position"], name: "index_bulletins_on_active_and_position"
+    t.index ["updated_by_id"], name: "index_bulletins_on_updated_by_id"
+  end
+
   create_table "fat_bear_champions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.integer "year", null: false
     t.string "bear_name", limit: 60, null: false
@@ -270,6 +291,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_20_000001) do
     t.index ["nickname"], name: "index_users_on_nickname", unique: true
   end
 
+  add_foreign_key "bulletins", "users", column: "updated_by_id", on_delete: :nullify
   add_foreign_key "fat_bear_champions", "posts", on_delete: :nullify
   add_foreign_key "fat_bear_champions", "users", column: "updated_by_id", on_delete: :nullify
   add_foreign_key "fat_bear_wins", "posts", on_delete: :cascade

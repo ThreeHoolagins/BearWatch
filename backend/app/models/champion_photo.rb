@@ -1,17 +1,17 @@
-# Stores an outside photo for the Fat Bear Week champion card. Only admins can
-# upload one, so it's processed right away in the web request (same checks and
+# Stores an admin-uploaded photo (the Fat Bear Week champion card's outside
+# photo, bulletin photos). Only admins can upload these, so it's processed right away in the web request (same checks and
 # metadata-stripping re-encode as posts, no bear check), rather than queued.
 class ChampionPhoto
   Stored = Data.define(:key, :storage, :width, :height, :bytes)
 
   class Rejected < StandardError; end
 
-  def self.store!(file)
+  def self.store!(file, prefix: "champion")
     upload = PhotoUpload.new(file)
     raise Rejected, upload.errors.full_messages.first unless upload.valid?
     raise Rejected, "That photo is over 50 megapixels. Try a smaller one." if ImageTools.too_large?(file.tempfile.path)
 
-    key = "champion-#{PhotoStorage.new_key}"
+    key = "#{prefix}-#{PhotoStorage.new_key}"
     local = PhotoStorage.media_path(key)
     width, height = ImageTools.to_webp(file.tempfile.path, local)
     bytes = local.size

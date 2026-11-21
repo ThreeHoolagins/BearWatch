@@ -547,6 +547,25 @@ button.drop .btn { margin-top: 14px; }
 .radios { display: flex; gap: 8px; margin-bottom: 14px; }
 .radios label { flex: 1; display: flex; gap: 8px; align-items: center; padding: 9px 10px; border: 2px solid rgba(31, 59, 45, .35); border-radius: 6px; cursor: pointer; font-size: 13px; }
 .radios label.on { border-color: var(--forest); background: rgba(31, 59, 45, .06); font-weight: 600; }
+.bulletin .who .av { color: var(--gold); }
+.bulletin .who:hover b { text-decoration: none; }
+.bulletin .who .av span { font-family: var(--slab); font-weight: 700; font-size: 18px; }
+.bulletin .who .tag { margin-left: auto; font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 3px 7px; border-radius: 4px; background: rgba(31, 59, 45, .1); color: var(--forest); }
+.bulletin .who .tag.sponsored { background: var(--wood); color: var(--cream); }
+.bulletin .bphoto { display: block; background: #1b1b1b; }
+.bulletin .bphoto img { display: block; width: 100%; height: auto; max-height: 640px; object-fit: contain; }
+.bulletin .bphoto.logo { background: #fffdf8; padding: 20px; }
+.bulletin .bphoto.logo img { max-height: 240px; }
+.bulletin .btext { padding: 12px 16px 16px; font-size: 14px; line-height: 1.55; border-top: 1px dashed rgba(31, 59, 45, .35); }
+.bulletin h3 { margin: 0 0 4px; font-size: 20px; }
+.bulletin p { margin: 0 0 12px; }
+.bulletin .btn { text-decoration: none; }
+.bulletin .msg { margin: 8px 0 0; }
+.fbw .bulletin { margin: 0; }
+.urow.picked { background: rgba(212, 162, 60, .14); }
+.bul-hint { font-size: 12px; opacity: .75; line-height: 1.45; margin-bottom: 14px; }
+.bul-paid { display: flex; gap: 8px; align-items: center; font-size: 14px; margin-bottom: 14px; }
+.bul-active { display: flex; gap: 8px; align-items: center; font-size: 14px; margin-top: 18px; }
 .previewlabel { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .7; margin: 0 0 8px; }
 
 @media (min-width: 820px) {

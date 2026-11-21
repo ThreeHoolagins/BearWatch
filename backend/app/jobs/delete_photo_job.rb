@@ -8,6 +8,8 @@ class DeletePhotoJob < ApplicationJob
   retry_on Aws::S3::Errors::ServiceError, Seahorse::Client::NetworkingError, wait: 1.minute, attempts: 5
 
   def perform(key, storage)
+    return if storage == "static" # ships with the frontend
+
     if storage == "r2"
       R2Client.new.delete(PhotoStorage.r2_key(key)) # deletes are free on R2
     else

@@ -16,7 +16,9 @@
 	}
 
 	# Photo uploads: 12 MB photo plus form fields. Everything else stays small.
-	handle /api/posts {
+	# Admin photo uploads (champion card, bulletins) get the same allowance.
+	@photo_uploads path /api/posts /api/admin/champion/* /api/admin/bulletins /api/admin/bulletins/*
+	handle @photo_uploads {
 		request_body {
 			max_size 13MB
 		}

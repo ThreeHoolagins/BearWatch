@@ -82,6 +82,20 @@ export interface Champion {
   link_text: string | null
 }
 
+// A house notice mixed into the feeds: an invite, the Ko-fi link, news.
+export interface Bulletin {
+  id: number
+  title: string
+  body: string
+  kind: 'link' | 'share' // 'share' shares Bear Watch itself
+  link_url: string | null
+  link_text: string
+  sponsor: string | null // paid placements are labeled "Sponsored"
+  photo: { url: string; width: number; height: number; logo?: boolean } | null // logos get a light backdrop
+  active: boolean
+  position: number
+}
+
 export interface AdminUser {
   id: number
   nickname: string

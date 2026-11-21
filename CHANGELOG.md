@@ -27,6 +27,16 @@ an annotated git tag (`phase-0` ... `phase-4`) with these notes.
   what we keep (provider account ID, nickname, posts) and what we don't.
 - **Production photos on R2:** prod now stores new photos in the shared
   `bearwatch-photos` bucket (at the root; dev uses `development/`).
+- **Bulletins:** house notices after every 10th post in Global and Following,
+  cycling in order, styled like a post with an optional photo. Managed in a
+  new Ranger Station tab. Ships with an
+  "invite a friend" share card and a Ko-fi "help keep the lights on" card.
+  Paid placements name a sponsor and are labeled "Sponsored · name" (FTC
+  disclosure), with `rel="sponsored"` on their links.
+  Starter cards use the Bear Watch and Big Ol' Bear Studios logos, shipped
+  with the frontend (`frontend/public/bulletins/`).
+- Caddy now allows 13 MB uploads for admin photos (champion card, bulletins);
+  they were capped at the 1 MB `/api/*` limit in production.
 - Posters can delete their own bears; development seed data with 25
   pop-culture bears and 32 public-domain bear photos.
 

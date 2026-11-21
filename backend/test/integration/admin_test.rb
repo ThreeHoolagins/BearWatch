@@ -21,7 +21,8 @@ class AdminTest < ActionDispatch::IntegrationTest
     sign_in_as(@otis)
 
     [ [ :get, "/api/admin/users" ], [ :post, "/api/admin/users/troll_bear_99/ban" ], [ :get, "/api/admin/wins" ],
-      [ :put, "/api/admin/champion/2026" ], [ :delete, "/api/admin/posts/1" ] ].each do |method, path|
+      [ :put, "/api/admin/champion/2026" ], [ :delete, "/api/admin/posts/1" ], [ :get, "/api/admin/bulletins" ],
+      [ :post, "/api/admin/bulletins" ], [ :patch, "/api/admin/bulletins/1" ], [ :delete, "/api/admin/bulletins/1" ] ].each do |method, path|
       api method, path
       assert_response :forbidden, "#{method} #{path}"
     end
@@ -121,5 +122,84 @@ class AdminTest < ActionDispatch::IntegrationTest
 
     perform_enqueued_jobs(only: DeletePhotoJob)
     assert_not PhotoStorage.media_path(post_.image_key).exist?
+  end
+
+  test "bulletins: create, edit, hide, reorder and delete; the feeds get the active ones in order" do
+    api :post, "/api/admin/bulletins", title: "Help keep the lights on", body: "Servers cost money.", kind: "link",
+                                       link_url: "https://ko-fi.com/bigolbearstudios", link_text: "Support on Ko-fi", position: 2
+    assert_response :created
+    kofi = Bulletin.find(response.parsed_body.dig("bulletin", "id"))
+
+    api :post, "/api/admin/bulletins", title: "Know a bear enthusiast?", body: "Invite a friend.", kind: "share",
+                                       link_text: "Invite a friend", position: 1
+    assert_response :created
+    invite = Bulletin.find(response.parsed_body.dig("bulletin", "id"))
+
+    get "/api/bulletins"
+    assert_equal [ invite.id, kofi.id ], response.parsed_body["bulletins"].map { _1["id"] }
+
+    api :patch, "/api/admin/bulletins/#{invite.id}", active: false
+    assert_response :ok
+    get "/api/bulletins"
+    assert_equal [ kofi.id ], response.parsed_body["bulletins"].map { _1["id"] }
+    get "/api/admin/bulletins"
+    assert_equal [ invite.id, kofi.id ], response.parsed_body["bulletins"].map { _1["id"] }, "admins still see hidden ones"
+
+    api :patch, "/api/admin/bulletins/#{kofi.id}", sponsor: "  REI  "
+    get "/api/bulletins"
+    assert_equal "REI", response.parsed_body["bulletins"].first["sponsor"], "paid placements name their sponsor"
+    api :patch, "/api/admin/bulletins/#{kofi.id}", sponsor: ""
+    assert_nil kofi.reload.sponsor
+
+    api :delete, "/api/admin/bulletins/#{kofi.id}"
+    assert_response :no_content
+    get "/api/bulletins"
+    assert_empty response.parsed_body["bulletins"]
+  end
+
+  test "bulletin links must be web links, and link bulletins need one" do
+    api :post, "/api/admin/bulletins", title: "Hi", body: "There", kind: "link", link_text: "Go"
+    assert_response :unprocessable_entity
+
+    api :post, "/api/admin/bulletins", title: "Hi", body: "There", kind: "link", link_text: "Go", link_url: "javascript:alert(1)"
+    assert_response :unprocessable_entity
+    assert_match "http", response.parsed_body["message"]
+
+    api :post, "/api/admin/bulletins", title: "Hi", body: "There", kind: "popup", link_text: "Go", link_url: "https://example.com"
+    assert_response :unprocessable_entity
+  end
+
+  test "bulletin photos are re-encoded, replaced, removed, and deleted with the bulletin" do
+    api :post, "/api/admin/bulletins", { title: "Gear up", body: "Bear spray saves bears too.", kind: "link", link_text: "Shop",
+                                         link_url: "https://www.rei.com", sponsor: "REI", photo: uploaded(make_image("png")) }, multipart: true
+    assert_response :created
+    bulletin = Bulletin.find(response.parsed_body.dig("bulletin", "id"))
+    first_key = bulletin.image_key
+    assert_match(/\Abulletin-/, first_key)
+    assert_equal :webp, PhotoUpload.sniff(File.binread(PhotoStorage.media_path(first_key), 16))
+    assert_equal [ 120, 80 ], response.parsed_body.dig("bulletin", "photo").values_at("width", "height")
+
+    assert_enqueued_with(job: DeletePhotoJob, args: [ first_key, "local" ]) do
+      api :patch, "/api/admin/bulletins/#{bulletin.id}", { photo: uploaded(make_image("jpg")) }, multipart: true
+    end
+    assert_not_equal first_key, bulletin.reload.image_key
+
+    api :patch, "/api/admin/bulletins/#{bulletin.id}", { title: "Gear up!" }, multipart: true
+    assert bulletin.reload.image_key, "editing the text keeps the photo"
+
+    second_key = bulletin.image_key
+    assert_enqueued_with(job: DeletePhotoJob, args: [ second_key, "local" ]) do
+      api :patch, "/api/admin/bulletins/#{bulletin.id}", { remove_photo: "true" }, multipart: true
+    end
+    assert_nil bulletin.reload.photo
+
+    api :patch, "/api/admin/bulletins/#{bulletin.id}", { photo: uploaded(scratch_file("fake.jpg", "not a photo")) }, multipart: true
+    assert_response :unprocessable_entity
+
+    api :patch, "/api/admin/bulletins/#{bulletin.id}", { photo: uploaded(make_image("jpg")) }, multipart: true
+    third_key = bulletin.reload.image_key
+    assert_enqueued_with(job: DeletePhotoJob, args: [ third_key, "local" ]) do
+      api :delete, "/api/admin/bulletins/#{bulletin.id}"
+    end
   end
 end

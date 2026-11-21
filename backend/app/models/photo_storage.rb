@@ -31,9 +31,13 @@ module PhotoStorage
       "#{prefix}#{key}.webp"
     end
 
+    # "static" is an image shipped with the frontend (frontend/public/bulletins),
+    # like the logos on the starter bulletins.
     def url_for(key, storage)
       if storage == "r2"
         "#{ENV.fetch("R2_PUBLIC_URL").chomp("/")}/#{r2_key(key)}"
+      elsif storage == "static"
+        "/bulletins/#{key}"
       else
         "/media/#{key}.webp"
       end

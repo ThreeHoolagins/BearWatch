@@ -1,20 +1,22 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { api, errorMessage } from '../api'
+import { BULLETIN_EVERY, forgetBulletins } from '../bulletins'
 import { forgetChampion } from '../champion'
 import { Avatar } from '../components/Avatar'
+import { BulletinCard } from '../components/BulletinCard'
 import { ChampionCard } from '../components/ChampionCard'
 import { ShieldIcon } from '../components/icons'
 import { Modal } from '../components/Modal'
 import { PostModal } from '../components/PostModal'
 import { Shell } from '../components/Shell'
-import { currentFatBearYear, FIRST_FAT_BEAR_YEAR, LAST_FAT_BEAR_YEAR, profilePath, type AdminUser, type Champion, type Post, type Win } from '../posts'
+import { currentFatBearYear, FIRST_FAT_BEAR_YEAR, LAST_FAT_BEAR_YEAR, profilePath, type AdminUser, type Bulletin, type Champion, type Post, type Win } from '../posts'
 import { useSession } from '../session'
 
 export function Admin() {
-  const [tab, setTab] = useState<'users' | 'fbw'>('users')
+  const [tab, setTab] = useState<'users' | 'fbw' | 'bulletins'>('users')
   return (
-    <Shell wide={tab === 'fbw'}>
+    <Shell wide={tab !== 'users'}>
       <div className="pagehead">
         <h2>Ranger station</h2>
         <span className="near"><ShieldIcon />Admins only</span>
@@ -22,8 +24,9 @@ export function Admin() {
       <div className="atabs" role="tablist">
         <button role="tab" aria-selected={tab === 'users'} className={tab === 'users' ? 'on' : ''} onClick={() => setTab('users')}>Users</button>
         <button role="tab" aria-selected={tab === 'fbw'} className={tab === 'fbw' ? 'on' : ''} onClick={() => setTab('fbw')}>Fat Bear Week</button>
+        <button role="tab" aria-selected={tab === 'bulletins'} className={tab === 'bulletins' ? 'on' : ''} onClick={() => setTab('bulletins')}>Bulletins</button>
       </div>
-      {tab === 'users' ? <UsersTab /> : <FatBearWeekTab />}
+      {tab === 'users' ? <UsersTab /> : tab === 'fbw' ? <FatBearWeekTab /> : <BulletinsTab />}
     </Shell>
   )
 }
@@ -352,6 +355,217 @@ function FatBearWeekTab() {
         <ChampionCard champion={previewCard} />
       </div>
       {openPost && <PostModal post={openPost} onClose={() => setOpenPost(null)} onChanged={() => void loadWins()} />}
+    </div>
+  )
+}
+
+/* ---------------- Bulletins ---------------- */
+
+type BulletinDraft = Omit<Bulletin, 'id' | 'link_url' | 'sponsor'> & { id: number | null; link_url: string; paid: boolean; sponsor: string }
+
+const nextPosition = (bulletins: Bulletin[]) => Math.max(0, ...bulletins.map((bulletin) => bulletin.position)) + 1
+
+const newBulletin = (bulletins: Bulletin[]): BulletinDraft => ({
+  id: null, title: '', body: '', kind: 'link', link_url: '', link_text: '', paid: false, sponsor: '', photo: null, active: true, position: nextPosition(bulletins),
+})
+
+function BulletinsTab() {
+  const [bulletins, setBulletins] = useState<Bulletin[] | null>(null)
+  const [draft, setDraft] = useState<BulletinDraft>(newBulletin([]))
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [preview, setPreview] = useState<string | null>(null)
+  const [fileInput, setFileInput] = useState(0) // bumped to clear the file picker
+
+  const load = useCallback(async () => {
+    const data = await api<{ bulletins: Bulletin[] }>('/api/admin/bulletins')
+    setBulletins(data.bulletins)
+    return data.bulletins
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    void api<{ bulletins: Bulletin[] }>('/api/admin/bulletins').then((data) => {
+      if (cancelled) return
+      setBulletins(data.bulletins)
+      setDraft(newBulletin(data.bulletins))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview) }, [preview])
+
+  const set = <K extends keyof BulletinDraft>(key: K, value: BulletinDraft[K]) => setDraft((current) => ({ ...current, [key]: value }))
+
+  const pickPhoto = (picked: File | null) => {
+    setFile(picked)
+    setPreview(picked ? URL.createObjectURL(picked) : null)
+  }
+
+  const clearPicker = () => {
+    pickPhoto(null)
+    setFileInput((count) => count + 1)
+  }
+
+  const startDraft = (next: BulletinDraft) => {
+    setDraft(next)
+    clearPicker()
+  }
+
+  const removePhoto = () => {
+    set('photo', null)
+    clearPicker()
+  }
+
+  const edit = (bulletin: Bulletin) => {
+    startDraft({ ...bulletin, link_url: bulletin.link_url ?? '', paid: Boolean(bulletin.sponsor), sponsor: bulletin.sponsor ?? '' })
+    setMessage(null)
+  }
+
+  const save = async (event: FormEvent) => {
+    event.preventDefault()
+    setBusy(true)
+    setMessage(null)
+    const { id, paid, photo, ...fields } = draft
+    const form = new FormData()
+    Object.entries({ ...fields, sponsor: paid ? fields.sponsor : '' }).forEach(([key, value]) => form.append(key, String(value)))
+    if (file) form.append('photo', file)
+    else if (!photo) form.append('remove_photo', 'true')
+    try {
+      const { bulletin } = await api<{ bulletin: Bulletin }>(id ? `/api/admin/bulletins/${id}` : '/api/admin/bulletins', {
+        method: id ? 'PATCH' : 'POST',
+        body: form,
+      })
+      await load()
+      edit(bulletin)
+      forgetBulletins()
+      setMessage({ ok: true, text: 'Bulletin saved.' })
+    } catch (error) {
+      setMessage({ ok: false, text: errorMessage(error, "Couldn't save the bulletin.") })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const remove = async (bulletin: Bulletin) => {
+    if (!window.confirm(`Delete “${bulletin.title}”?`)) return
+    await api(`/api/admin/bulletins/${bulletin.id}`, { method: 'DELETE' })
+    forgetBulletins()
+    const list = await load()
+    if (draft.id === bulletin.id) startDraft(newBulletin(list))
+  }
+
+  const inFeeds = bulletins?.filter((bulletin) => bulletin.active).length ?? 0
+  const previewCard: Bulletin = {
+    ...draft, id: draft.id ?? 0, title: draft.title || 'Title', body: draft.body || 'Message', link_text: draft.link_text || 'Button',
+    link_url: draft.link_url || '#', sponsor: draft.paid ? draft.sponsor.trim() || 'Sponsor name' : null,
+    photo: preview ? { url: preview, width: 1, height: 1 } : draft.photo,
+  }
+
+  return (
+    <div className="fbw">
+      <div>
+        <form className="form panel" onSubmit={save}>
+          <h3>{draft.id ? 'Edit bulletin' : 'New bulletin'}</h3>
+          <div className="field">
+            <label htmlFor="bul-title">Title</label>
+            <input id="bul-title" value={draft.title} maxLength={80} placeholder="Know a bear enthusiast?" onChange={(event) => set('title', event.target.value)} required />
+          </div>
+          <div className="field">
+            <label htmlFor="bul-body">Message</label>
+            <textarea id="bul-body" value={draft.body} maxLength={300} rows={4} onChange={(event) => set('body', event.target.value)} required />
+          </div>
+          <div className="field">
+            <label htmlFor="bul-photo">Photo (optional)</label>
+            <input key={fileInput} id="bul-photo" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
+                   onChange={(event) => pickPhoto(event.target.files?.[0] ?? null)} />
+            {(file || draft.photo) && (
+              <button type="button" className="link" onClick={removePhoto}>Remove photo</button>
+            )}
+            <div className="hint">Shown full width like a bear post. Re-encoded and stripped of metadata like any upload.</div>
+          </div>
+
+          <div className="label">Button</div>
+          <div className="radios">
+            <label className={draft.kind === 'link' ? 'on' : ''}>
+              <input type="radio" checked={draft.kind === 'link'} onChange={() => set('kind', 'link')} />Opens a link
+            </label>
+            <label className={draft.kind === 'share' ? 'on' : ''}>
+              <input type="radio" checked={draft.kind === 'share'} onChange={() => set('kind', 'share')} />Shares Bear Watch
+            </label>
+          </div>
+          <div className="two">
+            <div className="field">
+              <label htmlFor="bul-text">Button text</label>
+              <input id="bul-text" value={draft.link_text} maxLength={40} placeholder={draft.kind === 'share' ? 'Invite a friend' : 'Support on Ko-fi'}
+                     onChange={(event) => set('link_text', event.target.value)} required />
+            </div>
+            {draft.kind === 'link' && (
+              <div className="field">
+                <label htmlFor="bul-link">Link URL</label>
+                <input id="bul-link" type="url" value={draft.link_url} maxLength={500} placeholder="https://ko-fi.com/…"
+                       onChange={(event) => set('link_url', event.target.value)} required />
+              </div>
+            )}
+          </div>
+          <div className="two">
+            <div className="field">
+              <label htmlFor="bul-pos">Order</label>
+              <input id="bul-pos" type="number" value={draft.position} onChange={(event) => set('position', Number(event.target.value))} />
+            </div>
+            <label className="toggle bul-active">
+              <input type="checkbox" checked={draft.active} onChange={(event) => set('active', event.target.checked)} />
+              Show in feeds
+            </label>
+          </div>
+          <label className="toggle bul-paid">
+            <input type="checkbox" checked={draft.paid} onChange={(event) => set('paid', event.target.checked)} />
+            Paid placement (someone paid to be here)
+          </label>
+          {draft.paid && (
+            <div className="field">
+              <label htmlFor="bul-sponsor">Sponsor name</label>
+              <input id="bul-sponsor" value={draft.sponsor} maxLength={60} placeholder="REI" onChange={(event) => set('sponsor', event.target.value)} required />
+              <div className="hint">Shown as “Sponsored · name” on the card. The law requires paid placements to be clearly labeled.</div>
+            </div>
+          )}
+          <div className="hint bul-hint">
+            One bulletin shows after every {BULLETIN_EVERY} posts in Global and Following, cycling through the ones shown in feeds, lowest order first.
+          </div>
+
+          {message && <p className={`msg ${message.ok ? 'ok' : 'bad'}`}>{message.text}</p>}
+          <button className="btn wide" type="submit" disabled={busy || !draft.title.trim() || !draft.body.trim() || !draft.link_text.trim() || (draft.paid && !draft.sponsor.trim())}>
+            {busy ? 'Saving…' : draft.id ? 'Save bulletin' : 'Add bulletin'}
+          </button>
+        </form>
+
+        <div className="ulist panel winlist">
+          <div className="urow title">
+            <span className="info">Bulletins <span className="meta">· {inFeeds} in feeds</span></span>
+            {draft.id && <button className="btn ghost sm" onClick={() => startDraft(newBulletin(bulletins ?? []))}>New bulletin</button>}
+          </div>
+          {bulletins?.length === 0 && <div className="urow meta">None yet. Feeds show only bears.</div>}
+          {bulletins?.map((bulletin) => (
+            <div className={`urow ${bulletin.id === draft.id ? 'picked' : ''}`} key={bulletin.id}>
+              <div className="info">
+                <b>{bulletin.position}.</b> {bulletin.title}
+                {bulletin.sponsor && <span className="status ranger">Sponsored</span>}
+                {!bulletin.active && <span className="status banned">Hidden</span>}
+                <div className="meta">{bulletin.kind === 'share' ? 'Shares Bear Watch' : bulletin.link_url}</div>
+              </div>
+              <button className="btn ghost sm" onClick={() => edit(bulletin)}>Edit</button>
+              <button className="btn ghost danger sm" onClick={() => void remove(bulletin)}>Delete</button>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="previewlabel">Live preview</p>
+        <BulletinCard bulletin={previewCard} />
+      </div>
     </div>
   )
 }

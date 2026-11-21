@@ -84,6 +84,18 @@ export const TreeIcon = (p: IconProps) => (
   </svg>
 )
 
+export const HeartIcon = (p: IconProps) => (
+  <svg viewBox="0 0 24 24" className="ico" aria-hidden {...stroke} {...p}>
+    <path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.3a4.3 4.3 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z" />
+  </svg>
+)
+
+export const ShareIcon = (p: IconProps) => (
+  <svg viewBox="0 0 24 24" className="ico" aria-hidden {...stroke} {...p}>
+    <path d="M12 3v12M7.5 7.5 12 3l4.5 4.5M5 12v7.5h14V12" />
+  </svg>
+)
+
 export const CheckIcon = (p: IconProps) => (
   <svg viewBox="0 0 24 24" aria-hidden fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" {...p}>
     <path d="M4 12l5 5L20 6" />
